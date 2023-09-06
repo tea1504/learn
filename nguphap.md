@@ -9,6 +9,22 @@
 - **Nhóm III**: 
 　　　　　きます➞こられます
 　　　　　します➞されます
+#### Người<sub>1</sub>は　Người<sub>2</sub>に　V<sub>受身形</sub>
+- **Ý nghĩa**
+  - -N<sub>1</sub> bị/được N<sub>2</sub> làm V.
+  -N1 là chủ thể của câu,
+  N2 là chủ đề của hành 
+  vi được biểu thị bằng
+  trợ từ に.
+- **Công thức**
+  - Người<sub>1</sub>は　Người<sub>2</sub>に　V<sub>受身形</sub>
+- **Ví dụ**
+  - 先生は　私を　はめました。 Cô giáo khen tôi.
+    　　　　　　↓
+    私は　先生に　はめられました。 Tôi được cô giáo khen.
+  - 母は　私に　買い物を　頼みました。 Mẹ nhờ tôi mua đồ.
+    　　　　　　　　↓
+    私は　母に　買い物を　頼まれました。Tôi được mẹ nhờ đi mua đồ.
 ### V<sub>可能形</sub>: Thể khả năng
 #### ~V<sub>可能形</sub>なくなりました
 - **Ý nghĩa**: đã trở nên không thể ~
@@ -46,7 +62,19 @@
   - Chỉ cách thức
 - **Công thức**
   - V<sub>1</sub>て　V<sub>2</sub>
+  Làm V1 rồi làm V2
   - V<sub>1</sub>ないで　V<sub>2</sub>
+  Làm V2 mà không làm V1
+- **Ví dụ**
+  - 私は　しょうゆを　付けないで　たべますよ。
+  Tôi ăn mà không chấm nước tương.
+    - 付ける
+    - 付けない
+    - けないで
+  - 毎朝　ネクタイを　しめて　会社へ　行きます。
+  Mỗi sáng tôi thắt cà vạt rồi đi làm.
+    - しめ
+    - しめて
 ## Tính từ
 ### Tính từ thành trạng từ
 - **Công thức**: 
