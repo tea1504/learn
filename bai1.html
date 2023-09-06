@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<title>Markmap</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+}
+#mindmap {
+  display: block;
+  width: 100vw;
+  height: 100vh;
+}
+</style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.15.3/dist/style.css">
+</head>
+<body>
+<svg id="mindmap"></svg>
+<script src="https://cdn.jsdelivr.net/npm/d3@7.8.5/dist/d3.min.js"></script><script src="https://cdn.jsdelivr.net/npm/markmap-view@0.15.3/dist/browser/index.js"></script><script src="https://cdn.jsdelivr.net/npm/markmap-toolbar@0.15.3/dist/index.js"></script><script>(r => {
+                setTimeout(r);
+              })(() => {
+  const {
+    markmap,
+    mm
+  } = window;
+  const {
+    el
+  } = markmap.Toolbar.create(mm);
+  el.setAttribute('style', 'position:absolute;bottom:20px;right:20px');
+  document.body.append(el);
+})</script><script>((getMarkmap, getOptions, root, jsonOptions) => {
+          const markmap = getMarkmap();
+          window.mm = markmap.Markmap.create('svg#mindmap', (getOptions || markmap.deriveOptions)(jsonOptions), root);
+        })(() => window.markmap,null,{"type":"heading","depth":0,"payload":{"lines":[0,1]},"content":"V<sub>可能形</sub>: Thể khả năng","children":[{"type":"heading","depth":1,"payload":{"lines":[1,2]},"content":"~V<sub>可能形</sub>なくなりました","children":[{"type":"list_item","depth":2,"payload":{"lines":[2,3]},"content":"<strong>Ý nghĩa</strong>: đã trở nên không thể ~","children":[]},{"type":"list_item","depth":2,"payload":{"lines":[3,4]},"content":"<strong>Hướng dẫn</strong>","children":[{"type":"list_item","depth":3,"payload":{"lines":[4,6]},"content":"<strong>V<sub>可能形</sub></strong><br>\nCó thể làm V","children":[]},{"type":"list_item","depth":3,"payload":{"lines":[6,8]},"content":"<strong>V<sub>可能形</sub>ない</strong><br>\nKhông thể làm V","children":[]},{"type":"list_item","depth":3,"payload":{"lines":[8,10]},"content":"<strong>V<sub>可能形</sub>なくなります</strong><br>\nTrở nên không thể làm V","children":[]}]},{"type":"list_item","depth":2,"payload":{"lines":[10,11]},"content":"<strong>Ví dụ</strong>","children":[{"type":"list_item","depth":3,"payload":{"lines":[11,13]},"content":"太りましたから、その服が<strong>着られなくなりました</strong>。<br>\nVì mập lên nên không còn mặt đồ đó được nữa","children":[{"type":"list_item","depth":4,"payload":{"lines":[13,15]},"content":"着る<br>\nmặc","children":[]},{"type":"list_item","depth":4,"payload":{"lines":[15,17]},"content":"着られる<br>\ncó thể mặc","children":[]},{"type":"list_item","depth":4,"payload":{"lines":[17,19]},"content":"着られない<br>\nkhông thể mặc","children":[]},{"type":"list_item","depth":4,"payload":{"lines":[19,21]},"content":"着られなくなります<br>\ntrở nên không thể mặc","children":[]}]}]}]}]},{})</script>
+</body>
+</html>
