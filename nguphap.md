@@ -70,6 +70,15 @@
     không thể đi
     - 行けなくなります
     trở nên không thể đi
+### V<sub>Mệnh lệnh</sub>: Thể mệnh lệnh
+#### Cách chia<!-- fold -->
+- **Nhóm I**
+　　　　　V<sub>い</sub>➞V<sub>え</sub>
+- **Nhóm II**
+　　　　　V<sub>ます</sub>➞V<sub>ろ</sub>
+- **Nhóm III**
+　　　　　きます➞こい
+　　　　　します➞しろ
 ### Khác
 #### ~V<sub>て</sub> <!-- fold -->
 - **Ý nghĩa**
