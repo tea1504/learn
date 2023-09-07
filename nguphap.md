@@ -1,5 +1,17 @@
 # NGỮ PHÁP TỔNG HỢP
 ## Động từ
+### V<sub>て</sub>
+#### ～V<sub>て</sub>いる<!-- fold -->
+- **Ý nghĩa**
+  - -Diễn tả thói quen
+- **Công thức**
+  - ～V<sub>て</sub>いる
+  - ～V<sub>て</sub>いました
+- **Ví dụ**
+  - おふろに　はいりながら、本を　**読んでいます**。
+    Tôi thường vừa ngâm bồn vừa đọc sách.
+  - 家を　**掃除しています**。
+    Tôi thường dọn dẹp nhà cửa.
 ### V<sub>た</sub>: Thể quá khứ
 #### V<sub>1た</sub>あとで、V<sub>2</sub>～。<!-- fold -->
 - **Ý nghĩa**
@@ -14,8 +26,22 @@
     Hôm qua, sau khi bạn bè về xong tôi dọn dẹp đến tận 12 giờ.
   - **食事のあとで、**何を　しますか。
     Sau khi ăn xong thì làm gì?
+### V<sub>ない</sub>: Thể phủ định
+#### V<sub>1ない</sub>で、V<sub>2</sub><!-- fold -->
+- **Ý nghĩa**
+  - -Không làm V1 mà làm V2
+    -Do không thể thực hiện
+    được cả hai việc cùng
+    một lúc nên phải đưa ra
+    chủ ý làm cái này mà
+    không làm cái khác.
+- **Ví dụ**
+  - 日曜日は　どこも　**行かないで、うちで　ゆっくり　やすみます**。
+    Chủ nhật tôi không đi đâu cả mà chỉ ở nhà nghỉ ngơi.
+  - 昨夜、**寝ないで、勉強しました**。
+    Tối qua tôi học mà không ngủ.
 ### V<sub>受身形</sub>: Thể bị động
-#### Cách chia <!-- fold -->
+#### Cách chia
 - **Nhóm I**:
 　　　　　V<sub>「い」</sub>ます➞V<sub>「あ」</sub>れます
 - **Nhóm II**:
@@ -39,7 +65,31 @@
   - 母は　私に　買い物を　頼みました。 Mẹ nhờ tôi mua đồ.
     　　　　　　　　↓
     私は　母に　買い物を　頼まれました。Tôi được mẹ nhờ đi mua đồ.
+#### Người<sub>1</sub>は　Người<sub>2</sub>に　N<sub>3</sub>を　V<sub>受身形</sub><!-- fold -->
+- **Ý nghĩa**
+  - N2 thực hiện hành vi nào đó
+    đối với vật N3 mà N1 sở hữu.
+    Thường biểu hiện hành vi gây
+    phiền toái đối với chủ ngữ
+    của câu. Không dùng để bày
+    tỏ sự cảm kích, biết ơn.
+- **Ví dụ**
+  - 弟が　私の　パソコンを　壊しました。
+    Em trai phá máy tính của tôi.
+    　　　　　　　　↓
+    私は　弟に　パソコンを　壊されました。
+    Tôi bị em trai phá máy tính.
+  - 私は　犬に　手を　かまれました。
+    Tôi bị con chó cắn ở tay.
 ### V<sub>可能形</sub>: Thể khả năng
+#### Cách chia
+- **Nhóm I**
+　　　　　V<sub>「い」</sub>ます➞V<sub>「え」</sub>ます
+- **Nhóm II**
+　　　　　Vます➞Vられます
+- **Nhóm III**
+　　　　　きます➞こられます
+　　　　　します➞できます
 #### ~V<sub>可能形</sub>なくなりました <!-- fold -->
 - **Ý nghĩa**: đã trở nên không thể ~
 - **Công thức**
@@ -71,9 +121,9 @@
     - 行けなくなります
     trở nên không thể đi
 ### V<sub>Mệnh lệnh</sub>: Thể mệnh lệnh
-#### Cách chia<!-- fold -->
+#### Cách chia
 - **Nhóm I**
-　　　　　V<sub>い</sub>➞V<sub>え</sub>
+　　　　　V<sub>「い」</sub>➞V<sub>「え」</sub>
 - **Nhóm II**
 　　　　　V<sub>ます</sub>➞V<sub>ろ</sub>
 - **Nhóm III**
@@ -133,3 +183,4 @@
     tiểu thuyết gia. Vì thế bây
     giờ vừa viết tiểu thuyết
     vừa đi làm thêm. 
+## Khác
