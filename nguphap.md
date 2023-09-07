@@ -1,7 +1,21 @@
 # NGỮ PHÁP TỔNG HỢP
 ## Động từ
+### V<sub>た</sub>: Thể quá khứ
+#### V<sub>1た</sub>あとで、V<sub>2</sub>～。<!-- fold -->
+- **Ý nghĩa**
+  - -Nhấn mạnh ý nghĩa thời gian
+    của V2. V2 chỉ xảy ra khi V1
+    xảy ra.
+    -Chia thì theo V2
+- **Công thức**
+  - V<sub>1た</sub>あとで、V<sub>2</sub>～。
+- **Ví dụ**
+  - 昨日、友達が　**帰ったあとで、**１２時まで　片づけました。
+    Hôm qua, sau khi bạn bè về xong tôi dọn dẹp đến tận 12 giờ.
+  - **食事のあとで、**何を　しますか。
+    Sau khi ăn xong thì làm gì?
 ### V<sub>受身形</sub>: Thể bị động
-#### Cách chia
+#### Cách chia <!-- fold -->
 - **Nhóm I**:
 　　　　　V<sub>「い」</sub>ます➞V<sub>「あ」</sub>れます
 - **Nhóm II**:
@@ -9,7 +23,7 @@
 - **Nhóm III**: 
 　　　　　きます➞こられます
 　　　　　します➞されます
-#### Người<sub>1</sub>は　Người<sub>2</sub>に　V<sub>受身形</sub>
+#### Người<sub>1</sub>は　Người<sub>2</sub>に　V<sub>受身形</sub> <!-- fold -->
 - **Ý nghĩa**
   - -N<sub>1</sub> bị/được N<sub>2</sub> làm V.
   -N1 là chủ thể của câu,
@@ -26,7 +40,7 @@
     　　　　　　　　↓
     私は　母に　買い物を　頼まれました。Tôi được mẹ nhờ đi mua đồ.
 ### V<sub>可能形</sub>: Thể khả năng
-#### ~V<sub>可能形</sub>なくなりました
+#### ~V<sub>可能形</sub>なくなりました <!-- fold -->
 - **Ý nghĩa**: đã trở nên không thể ~
 - **Công thức**
   - **V<sub>可能形</sub>**
@@ -57,7 +71,7 @@
     - 行けなくなります
     trở nên không thể đi
 ### Khác
-#### ~V<sub>て</sub>
+#### ~V<sub>て</sub> <!-- fold -->
 - **Ý nghĩa**
   - Chỉ cách thức
 - **Công thức**
@@ -76,7 +90,7 @@
     - しめ
     - しめて
 ## Tính từ
-### Tính từ thành trạng từ
+### Tính từ thành trạng từ <!-- fold -->
 - **Công thức**: 
 　　　A<sub>い</sub>➞A<sub><del>い</del></sub>く
 　　　A<sub>な</sub>➞A<sub><del>な</del></sub>に
@@ -89,11 +103,24 @@
     - 上手に
 ## Trợ từ
 ### に
-#### N **に** V<sub>di chuyển</sub>
+#### N **に** V<sub>di chuyển</sub> <!-- fold -->
 - **Ý nghĩa**
   - Trợ từ に biểu thị điểm đến,
 được sử dụng thay trợ từ chỉ phương hướng へ 
 - **Ví dụ**
   - 交番**に**行かないと。
   Đến đồn cảnh sát
-
+## Liên từ
+### それで<!-- fold -->
+- **Ý nghĩa**
+  - Liên từ được dùng để trình bày
+    kết quả do nguyên nhân hoặc lý
+    do đã được trình bày ở trước đó.
+- **Ví dụ**
+  - 将来　小説家に　なりたいです。
+    それで　今は　アルバイトを
+    しんがら　小説を　書いています。
+    Sau này tôi muốn trở thành
+    tiểu thuyết gia. Vì thế bây
+    giờ vừa viết tiểu thuyết
+    vừa đi làm thêm. 
