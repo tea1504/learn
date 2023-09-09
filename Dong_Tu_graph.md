@@ -1,5 +1,5 @@
 ```mermaid
-graph RL;
+graph LR;
     Vmasu((V丁寧形))
     Vru((V辞書形))
     Vta((Vた形))
@@ -152,4 +152,6 @@ graph RL;
 
     N1BiDuocN2V2(N1は　N2に　N3を　V受身形)
     N1BiDuocN2V-->N1BiDuocN2V2
+
+    Vta-->khiSauKhi(Vたら,)
 ```
