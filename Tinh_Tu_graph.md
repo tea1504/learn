@@ -7,6 +7,6 @@ graph LR;
 
     Ai-->AiN(Bỏ い thêm さ)-->N{Danh từ}
 
-    Ai-->khi(Aい/Aな　とき)
+    Ai-->khi(Nの/Aい/Aな/Vる/Vた/Vない　とき,)
     Ana-->khi
 ```
