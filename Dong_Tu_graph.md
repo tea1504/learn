@@ -1,5 +1,5 @@
 ```mermaid
-graph LR;
+graph RL;
     Vmasu((V丁寧形))
     Vru((V辞書形))
     Vta((Vた形))
@@ -17,7 +17,7 @@ graph LR;
     Vtu((V自動詞))
 
     TTT((普通形))
-    Vmasu--->TTT-->|Quá khứ|Vta
+    Vmasu-->TTT-->|Quá khứ|Vta
     TTT-->|Phủ định|Vnai
     TTT-->|Hiện tại|Vte
     TTT-->Vru
@@ -86,12 +86,70 @@ graph LR;
     Vru_nai-->duDinh
     duDinh-->|Dứt khoát hơn|dinh
 
-    chiChiCo(しか　ない)
-    Vnai-->|Phủ định cả tính và danh|chiChiCo
+    chiChiCo(しか　ない->Phủ định cả tính và danh)
+    Vnai-->chiChiCo
 
     coLeChacLa(多分　TTT　でしょう)
     TTT-->coLeChacLa
 
     coBietVKhong(Vるのを　知っていますか)
     viecVThiA3-->coBietVKhong
+
+    vanCon(まだ　Vている)
+    Vte-->vanCon
+
+    Vyc-->Vmasyou((Vましょう))
+    Vmasyou-->Vyc
+
+    nhanManhN(TTT `N/Aな bỏ だ thêm な`　のは　Nです)
+    TTT-->nhanManhN
+    viecVThiA-->nhanManhN
+
+    nenV(Vたら　いいです)
+    Vta-->nenV
+
+    VThanhN(V bỏ ます->Danh từ)
+    Vmasu-->VThanhN
+
+    coTha(Nが　V他てある)
+    Vtha-->coTha
+    Vte-->coTha
+
+    coTu(Nが　V自ています)
+    Vtu-->coTu
+    Vte-->coTu
+
+    vi(TTT`N/Aな bỏ だ thêm な`　ので,)
+    TTT-->vi
+
+    coTheVkn(は　Nが　V可能形)
+    Vkn-->coTheVkn
+
+    coTheDeki(は　Nを　Vることが　できます)
+    Vru-->coTheDeki-->coTheVkn
+
+    trenDuongGiuaLuc(Vる/Nの途中で)
+    Vru-->trenDuongGiuaLuc
+
+    khongNhungMaCon(は　も　TTTし,　も　TTTし,...それで/それに,)
+    TTT-->khongNhungMaCon
+
+    longCauNghiVan(NVT　TTT`N/Aな bỏ だ`か,)
+    TTT-->longCauNghiVan
+
+    longCauNghiVan-->longCauNghiVan2(TTT`N/Aな bỏ だ`か,　ない/どう　か)
+
+    daKhongThe(V可能形なくなりました)
+    Vkn-->daKhongThe
+    Vnai-->daKhongThe
+    Vta-->daKhongThe
+
+    thuLamV(は　Nを　Vてみます)
+    Vte-->thuLamV
+
+    N1BiDuocN2V(N1は　N2に　V受身形)
+    Vbd-->N1BiDuocN2V
+
+    N1BiDuocN2V2(N1は　N2に　N3を　V受身形)
+    N1BiDuocN2V-->N1BiDuocN2V2
 ```
