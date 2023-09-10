@@ -4,4 +4,7 @@ graph LR;
 
     N-->nhamMucDich(Để, vì, nhằm mục đích\n***\n___Vる/Nの　ために,___)
     N-->de(Để\n***\n___Vる/N のに___.)
+    N-->khi(Khi\n***\nNの　　とき,\nAい　　とき,\nAな　　とき,\nVる　　とき,\nVた　　とき,\nVない　とき,)
+    N-->neuMaNThi(Nếu mà N thì\n***\n___Nなら,___)
+    N-->trenDuongGiuaLuc(Trên đường, giữa lúc\n***\n___Vる途中で___\n___Nの途中で___)
 ```
