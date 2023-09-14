@@ -22,4 +22,7 @@ graph LR;
 	npTangVte-.->npNhanVte(私は　Ngườiに Vて　Vnhận)
 	Vn==>|Người trên|nhan{{いただきます}}
 	Vn==>|Bạn và người dưới|nhan2{{もらいます}}
+
+	style npCho fill:#001
+	style npTang fill:#001
 ```
