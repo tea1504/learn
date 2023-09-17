@@ -16,15 +16,17 @@ graph LR;
     boNa-->themNi{{Thêm に}}-->Adv{Trạng từ}
     Adv-->lamCho(Làm cho\n***\n___Nを　Aく　　します\n___Nを　Aなに　します\n___Nを　Nに　　します)
     A-->truongHop(Khi/Trường hợp\n***\n___Aい　　場合,___\n___Aな　　場合,___\n___Nの　　場合,___\n___Vる　　場合,___\n___Vた　　場合,___\n___Vない　場合,___)
+    Adv-->neu(Nếu\n***\nもし___A　　かったら,___\nもし___Aな　かったら,___\nもし___N　　かったら,___\nもし___Vた　かったら,___\nもし___Vな　かったら,___)
 
-    style A fill:#006
+    style A fill:#009
     style Adv fill:#000
     style chiNguyenNhan fill:#001
     style coVeSapSua fill:#000
     style coVeSapSua fill:#001
-    style khi fill:#000
-    style lamCho fill:#001
+    style khi fill:#001
+    style lamCho fill:#002
     style N fill:#001
+    style neu fill:#000
     style qua fill:#001
-    style truongHop fill:#001
+    style truongHop fill:#002
 ```
