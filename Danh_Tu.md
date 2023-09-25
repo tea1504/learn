@@ -14,9 +14,9 @@ graph LR;
     N-->lamTheoNhu(Làm theo như\n***\n___Vたとおりに,___\n___Nのとおりに,___)
     N-->neu(Nếu\n***\nもし___A　　かったら,___\nもし___Aな　かったら,___\nもし___N　　かったら,___\nもし___Vた　かったら,___\nもし___Vな　かったら,___)
 
-    style N fill:#010
+    style N fill:#011
     style chiNguyenNhan fill:#001
-    style de fill:#000
+    style de fill:#001
     style khi fill:#001
     style lamCho fill:#002
     style lamTheoNhu fill:#000
