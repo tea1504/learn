@@ -17,6 +17,7 @@ graph LR;
     Adv-->lamCho(Làm cho\n***\n___Nを　Aく　　します\n___Nを　Aなに　します\n___Nを　Nに　　します)
     A-->truongHop(Khi/Trường hợp\n***\n___Aい　　場合,___\n___Aな　　場合,___\n___Nの　　場合,___\n___Vる　　場合,___\n___Vた　　場合,___\n___Vない　場合,___)
     Adv-->neu(Nếu\n***\nもし___A　　かったら,___\nもし___Aな　かったら,___\nもし___N　　かったら,___\nもし___Vた　かったら,___\nもし___Vな　かったら,___)
+    Adv-->troNen(Trở nên\n***\n___は　ｎに　なります)
 
     style A fill:#009
     style Adv fill:#000
@@ -29,4 +30,5 @@ graph LR;
     style neu fill:#000
     style qua fill:#001
     style truongHop fill:#002
+    style troNen fill:#000
 ```

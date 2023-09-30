@@ -13,17 +13,19 @@ graph LR;
     N-->chiNguyenNhan(Chỉ nguyên nhân\n***\n___Vて　　,___\n___Vなくて,___\n___Aくて　,___\n___Aなで　,___\n___Nで　　,___)
     N-->lamTheoNhu(Làm theo như\n***\n___Vたとおりに,___\n___Nのとおりに,___)
     N-->neu(Nếu\n***\nもし___A　　かったら,___\nもし___Aな　かったら,___\nもし___N　　かったら,___\nもし___Vた　かったら,___\nもし___Vな　かったら,___)
+    N-->troNen(Trở nên\n***\n___は　ｎに　なります)
 
-    style N fill:#011
+    style N fill:#014
     style chiNguyenNhan fill:#001
-    style de fill:#001
+    style de fill:#002
     style khi fill:#001
     style lamCho fill:#002
     style lamTheoNhu fill:#000
     style neu fill:#002
-    style neuMaNThi fill:#000
-    style nhamMucDich fill:#001
+    style neuMaNThi fill:#001
+    style nhamMucDich fill:#002
     style quyetDinhChon fill:#002
     style trenDuongGiuaLuc fill:#001
+    style troNen fill:#000
     style truongHop fill:#002
 ```

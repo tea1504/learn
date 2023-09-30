@@ -34,7 +34,7 @@ graph LR;
 
 	style npCho fill:#001
 	style npTang fill:#001
-	style npNhan fill:#001
+	style npNhan fill:#002
 	style choToi fill:#000
 	style N1DuocN2VGiup fill:#000
 	style N1LamVChoN2 fill:#000
