@@ -18,9 +18,11 @@ graph LR;
     A-->truongHop(Khi/Trường hợp\n***\n___Aい　　場合,___\n___Aな　　場合,___\n___Nの　　場合,___\n___Vる　　場合,___\n___Vた　　場合,___\n___Vない　場合,___)
     Adv-->neu(Nếu\n***\nもし___A　　かったら,___\nもし___Aな　かったら,___\nもし___N　　かったら,___\nもし___Vた　かったら,___\nもし___Vな　かったら,___)
     Adv-->troNen(Trở nên\n***\n___は　ｎに　なります)
+    A-->chacChanLa(Chắc chắn là\n***\n___Ａい　はずです\n___Ａな　はずです\n___Ｎの　はずです\n___Ｖる　はずです\n___Ｖないはずです)
 
-    style A fill:#009
+    style A fill:#010
     style Adv fill:#000
+    style chacChanLa fill:#001
     style chiNguyenNhan fill:#001
     style coVeSapSua fill:#000
     style coVeSapSua fill:#001
@@ -29,6 +31,6 @@ graph LR;
     style N fill:#001
     style neu fill:#000
     style qua fill:#001
-    style truongHop fill:#002
     style troNen fill:#000
+    style truongHop fill:#002
 ```

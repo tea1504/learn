@@ -14,8 +14,10 @@ graph LR;
     N-->lamTheoNhu(Làm theo như\n***\n___Vたとおりに,___\n___Nのとおりに,___)
     N-->neu(Nếu\n***\nもし___A　　かったら,___\nもし___Aな　かったら,___\nもし___N　　かったら,___\nもし___Vた　かったら,___\nもし___Vな　かったら,___)
     N-->troNen(Trở nên\n***\n___は　ｎに　なります)
+    N-->chacChanLa(Chắc chắn là\n***\n___Ａい　はずです\n___Ａな　はずです\n___Ｎの　はずです\n___Ｖる　はずです\n___Ｖないはずです)
 
-    style N fill:#014
+    style N fill:#015
+    style chacChanLa fill:#001
     style chiNguyenNhan fill:#001
     style de fill:#002
     style khi fill:#001
