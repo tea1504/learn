@@ -20,9 +20,9 @@ graph LR;
     Adv-->troNen(Trở nên\n***\n___は　ｎに　なります)
     A-->chacChanLa(Chắc chắn là\n***\n___Ａい　はずです\n___Ａな　はずです\n___Ｎの　はずです\n___Ｖる　はずです\n___Ｖないはずです)
 
-    style A fill:#010
+    style A fill:#011
     style Adv fill:#000
-    style chacChanLa fill:#001
+    style chacChanLa fill:#002
     style chiNguyenNhan fill:#001
     style coVeSapSua fill:#000
     style coVeSapSua fill:#001

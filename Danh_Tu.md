@@ -16,8 +16,8 @@ graph LR;
     N-->troNen(Trở nên\n***\n___は　ｎに　なります)
     N-->chacChanLa(Chắc chắn là\n***\n___Ａい　はずです\n___Ａな　はずです\n___Ｎの　はずです\n___Ｖる　はずです\n___Ｖないはずです)
 
-    style N fill:#015
-    style chacChanLa fill:#001
+    style N fill:#016
+    style chacChanLa fill:#002
     style chiNguyenNhan fill:#001
     style de fill:#002
     style khi fill:#001
