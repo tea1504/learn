@@ -1,0 +1,148 @@
+.card-container{
+  padding:16px;
+  max-width:500px;
+  margin:auto;
+  text-align:center;
+  font-family:system-ui, sans-serif;
+}
+
+/* INPUT */
+input{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  border-radius:12px;
+  border:2px solid #ccc;
+  font-size:16px;
+}
+
+input:focus{
+  outline:none;
+  border-color:#3b82f6;
+  box-shadow:0 0 0 3px rgba(59,130,246,0.2);
+}
+
+/* BUTTON */
+button{
+  width:100%;
+  padding:12px;
+  border:none;
+  border-radius:12px;
+  background:#3b82f6;
+  color:white;
+  font-size:16px;
+  transition:0.2s;
+}
+
+button:hover{
+  background:#2563eb;
+}
+
+button:active{
+  transform:scale(0.97);
+}
+
+/* RESULT */
+#result{
+  margin-top:10px;
+  font-weight:bold;
+  animation:fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(5px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+/* HINT */
+#hint{
+  margin-top:10px;
+  padding:12px;
+  border-radius:12px;
+  background:#f1f5f9;
+  border:1px solid #e2e8f0;
+}
+
+/* TEXT COLORS */
+.correct{color:#22c55e;font-weight:bold;}
+.partial{color:#eab308;font-weight:bold;}
+.missing{color:#999;}
+
+/* STATUS */
+.good, .bad{
+  padding:10px;
+  border-radius:20px;
+  font-weight:bold;
+  margin-top:10px;
+}
+
+.good{
+  background:#dcfce7;
+  color:#166534;
+}
+
+.bad{
+  background:#fee2e2;
+  color:#991b1b;
+}
+
+/* TABLE */
+.stat-table{
+  width:100%;
+  margin-top:12px;
+  border-collapse:collapse;
+  border-radius:12px;
+  overflow:hidden;
+}
+
+.stat-table th{
+  background:#3b82f6;
+  color:white;
+  padding:8px;
+}
+
+.stat-table td{
+  padding:8px;
+  border-bottom:1px solid #eee;
+}
+
+.stat-table tr:last-child td{
+  border-bottom:none;
+}
+
+/* EMPTY */
+.empty{
+  opacity:0.6;
+  margin-top:10px;
+}
+
+/* DARK MODE */
+@media (prefers-color-scheme: dark){
+
+  body{
+    background:#0f172a;
+    color:#e2e8f0;
+  }
+
+  input{
+    background:#1e293b;
+    color:white;
+    border-color:#334155;
+  }
+
+  #hint{
+    background:#1e293b;
+    border-color:#334155;
+  }
+
+  .stat-table td{
+    border-bottom:1px solid #334155;
+  }
+
+}
+canvas{
+  width:100%;
+  height:80px;
+  display:block;
+  margin-top:6px;
+}
