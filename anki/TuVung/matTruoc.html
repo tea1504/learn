@@ -20,145 +20,145 @@
 </div>
 
 <script>
-(function () {
+    (function () {
 
-    /* =========================
-       ⚙️ CONFIG
-    ========================= */
-    const SHOW_ANSWER_THRESHOLD = 3; // sai >= 3 lần thì show đáp án
+        /* =========================
+           ⚙️ CONFIG
+        ========================= */
+        const SHOW_ANSWER_THRESHOLD = 3; // sai >= 3 lần thì show đáp án
 
-    /* =========================
-       🛡️ SAFE DATA (tránh vỡ JS)
-       - remove xuống dòng
-       - encode key để lưu localStorage
-    ========================= */
-    const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
-    if (!raw) return;
+        /* =========================
+           🛡️ SAFE DATA (tránh vỡ JS)
+           - remove xuống dòng
+           - encode key để lưu localStorage
+        ========================= */
+        const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
+        if (!raw) return;
 
-    const cardKey = encodeURIComponent(raw);
+        const cardKey = encodeURIComponent(raw);
 
-    let fail = 0;
+        let fail = 0;
 
-    /* =========================
-       🔤 NORMALIZE
-       - lower case
-       - bỏ khoảng trắng
-    ========================= */
-    function normalize(s) {
-        return s.toLowerCase().replace(/\s+/g, "");
-    }
-
-    /* =========================
-       📚 PARSE ANSWERS
-       format:
-       食べる/taberu; 飲む/nomu
-       hoặc
-       食べる; 飲む
-    ========================= */
-    function parseAnswers(str) {
-        return str.split(";").map(x => {
-            const parts = x.split("/");
-            return parts.length > 1
-                ? parts[1].trim()
-                : parts[0].trim();
-        });
-    }
-
-    const answers = parseAnswers(raw);
-
-    /* =========================
-       ✅ CHECK ĐÁP ÁN (không cần đúng thứ tự)
-    ========================= */
-    function isCorrect(input) {
-        const parts = input.split(";")
-            .map(x => normalize(x))
-            .filter(Boolean);
-
-        if (parts.length !== answers.length) return false;
-
-        const sortedInput = [...parts].sort();
-        const sortedAnswers = answers.map(a => normalize(a)).sort();
-
-        return sortedInput.every((p, i) => p === sortedAnswers[i]);
-    }
-
-    /* =========================
-       🧩 GỢI Ý TỪNG CHỮ
-    ========================= */
-    function generateMask(user, correct) {
-        const u = normalize(user);
-        const c = normalize(correct);
-
-        let result = "";
-
-        for (let i = 0; i < c.length; i++) {
-            if (u[i] === c[i]) {
-                result += `<span class="correct">${correct[i]}</span>`;
-            } 
-            else if (u.indexOf(c[i]) !== -1) {
-                result += `<span class="partial">${correct[i]}</span>`;
-            } 
-            else {
-                result += `<span class="missing">_</span>`;
-            }
+        /* =========================
+           🔤 NORMALIZE
+           - lower case
+           - bỏ khoảng trắng
+        ========================= */
+        function normalize(s) {
+            return s.toLowerCase().replace(/\s+/g, "");
         }
 
-        return result;
-    }
-
-    /* =========================
-       💾 SAVE STATS
-       - giới hạn 50 lần để tránh phình bộ nhớ
-    ========================= */
-    function saveStats(fail) {
-        let stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
-
-        if (!stats[cardKey]) {
-            stats[cardKey] = { attempts: [] };
-        }
-
-        stats[cardKey].attempts.push(fail);
-
-        if (stats[cardKey].attempts.length > 50) {
-            stats[cardKey].attempts.shift();
-        }
-
-        localStorage.setItem("cardStats", JSON.stringify(stats));
-    }
-
-    const input = document.getElementById("myInput");
-    const result = document.getElementById("result");
-    const hint = document.getElementById("hint");
-
-    /* =========================
-       🎯 HANDLE SUBMIT
-    ========================= */
-    function handle() {
-
-        const userInput = input.value;
-
-        if (isCorrect(userInput)) {
-            result.innerHTML = "✅ PASS";
-
-            saveStats(fail);
-
-            fail = 0;
-            hint.innerHTML = "";
-
-            // UX: clear input
-            input.value = "";
-        } else {
-            result.innerHTML = "❌ NOT PASS";
-            fail++;
-
-            let html = "";
-
-            answers.forEach((ans, i) => {
-                html += generateMask(userInput.split(";")[i] || "", ans) + "<br>";
+        /* =========================
+           📚 PARSE ANSWERS
+           format:
+           食べる/taberu; 飲む/nomu
+           hoặc
+           食べる; 飲む
+        ========================= */
+        function parseAnswers(str) {
+            return str.split(";").map(x => {
+                const parts = x.split("/");
+                return parts.length > 1
+                    ? parts[1].trim()
+                    : parts[0].trim();
             });
+        }
 
-            if (fail >= SHOW_ANSWER_THRESHOLD) {
-                hint.innerHTML = `
+        const answers = parseAnswers(raw);
+
+        /* =========================
+           ✅ CHECK ĐÁP ÁN (không cần đúng thứ tự)
+        ========================= */
+        function isCorrect(input) {
+            const parts = input.split(";")
+                .map(x => normalize(x))
+                .filter(Boolean);
+
+            if (parts.length !== answers.length) return false;
+
+            const sortedInput = [...parts].sort();
+            const sortedAnswers = answers.map(a => normalize(a)).sort();
+
+            return sortedInput.every((p, i) => p === sortedAnswers[i]);
+        }
+
+        /* =========================
+           🧩 GỢI Ý TỪNG CHỮ
+        ========================= */
+        function generateMask(user, correct) {
+            const u = normalize(user);
+            const c = normalize(correct);
+
+            let result = "";
+
+            for (let i = 0; i < c.length; i++) {
+                if (u[i] === c[i]) {
+                    result += `<span class="correct">${correct[i]}</span>`;
+                }
+                else if (u.indexOf(c[i]) !== -1) {
+                    result += `<span class="partial">${correct[i]}</span>`;
+                }
+                else {
+                    result += `<span class="missing">_</span>`;
+                }
+            }
+
+            return result;
+        }
+
+        /* =========================
+           💾 SAVE STATS
+           - giới hạn 50 lần để tránh phình bộ nhớ
+        ========================= */
+        function saveStats(fail) {
+            let stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+
+            if (!stats[cardKey]) {
+                stats[cardKey] = { attempts: [] };
+            }
+
+            stats[cardKey].attempts.push(fail);
+
+            if (stats[cardKey].attempts.length > 50) {
+                stats[cardKey].attempts.shift();
+            }
+
+            localStorage.setItem("cardStats", JSON.stringify(stats));
+        }
+
+        const input = document.getElementById("myInput");
+        const result = document.getElementById("result");
+        const hint = document.getElementById("hint");
+
+        /* =========================
+           🎯 HANDLE SUBMIT
+        ========================= */
+        function handle() {
+
+            const userInput = input.value;
+
+            if (isCorrect(userInput)) {
+                result.innerHTML = "✅ PASS";
+
+                saveStats(fail);
+
+                fail = 0;
+                hint.innerHTML = "";
+
+                // UX: clear input
+                input.value = "";
+            } else {
+                result.innerHTML = "❌ NOT PASS";
+                fail++;
+
+                let html = "";
+
+                answers.forEach((ans, i) => {
+                    html += generateMask(userInput.split(";")[i] || "", ans) + "<br>";
+                });
+
+                if (fail >= SHOW_ANSWER_THRESHOLD) {
+                    hint.innerHTML = `
                     <div class="answer-hint">
                         💡 ${answers.join("; ")}
                     </div>
@@ -166,23 +166,26 @@
                         Nhập lại để nhớ nhé
                     </div>
                 `;
-            } else {
-                hint.innerHTML = html;
+                } else {
+                    hint.innerHTML = html;
+                }
+
+                input.focus();
+                input.select();
             }
-
-            input.focus();
-            input.select();
         }
-    }
 
-    document.getElementById("submitBtn").onclick = handle;
+        document.getElementById("submitBtn").onclick = handle;
 
-    input.addEventListener("keydown", e => {
-        if (e.key === "Enter") handle();
-    });
+        input.addEventListener("keydown", e => {
+            if (e.key === "Enter") handle();
+        });
 
-    // auto focus
-    input.focus();
+        requestAnimationFrame(() => {
+            setTimeout(() => {
+                input.focus();
+            }, 100);
+        });
 
-})();
+    })();
 </script>
