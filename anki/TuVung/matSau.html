@@ -1,4 +1,5 @@
 <div class="card-container">
+    <div class="answer">{{Mặt trước}}</div>
 
     <div class="answer">{{Mặt sau}}</div>
 
@@ -78,23 +79,21 @@
         }
 
         /* =========================
-           🏷️ LEVEL
+           🏷️ LEVEL (2 trạng thái)
+           - có sai → học lại
+           - không sai → tốt
         ========================= */
         let level = "";
         let levelClass = "";
 
-        if (avg === 0) {
-            level = "😎 Dễ";
-            levelClass = "good";
-        } else if (avg <= 2) {
-            level = "🙂 Ổn";
-            levelClass = "good";
-        } else if (avg <= 4) {
-            level = "⚠️ Khó";
+        const hasFail = last > 0;
+
+        if (hasFail) {
+            level = "❌ Học lại";
             levelClass = "bad";
         } else {
-            level = "💀 Rất khó";
-            levelClass = "bad";
+            level = "✅ Tốt";
+            levelClass = "good";
         }
 
         /* =========================

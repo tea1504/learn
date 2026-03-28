@@ -3,6 +3,11 @@
     <!-- Hiển thị đáp án (ẩn/hiện tùy logic Anki) -->
     <div class="answer">{{Mặt sau}}</div>
 
+    <!-- Typing của Anki -->
+    <div class="typing">
+        {{type:Mặt trước}}
+    </div>
+
     <!-- Input custom -->
     <div class="custom-input">
         <input id="myInput" placeholder="Nhập..." />
@@ -168,14 +173,9 @@
         }
 
         document.getElementById("submitBtn").onclick = handle;
-
-        input.addEventListener("keydown", e => {
-            if (e.key === "Enter") handle();
-        });
-
-        setTimeout(() => {
-            input.focus();
-        }, 300);
+        input.addEventListener("keydown", e => { if (e.key === "Enter") handle(); });
+        input.addEventListener("focus", () => input.select());
+        setTimeout(() => { input.focus(); input.select(); }, 100);
 
     })();
 </script>
