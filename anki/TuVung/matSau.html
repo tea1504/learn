@@ -1,78 +1,78 @@
 <div class="card-container">
 
-  <div class="answer">{{Mặt sau}}</div>
+    <div class="answer">{{Mặt sau}}</div>
 
-  <div id="analytics"></div>
+    <div id="analytics"></div>
 
 </div>
 
 <script>
-(function(){
+    (function () {
 
-  const raw = `{{Mặt trước}}`;
-  const cardKey = encodeURIComponent(raw);
+        const raw = `{{Mặt trước}}`;
+        const cardKey = encodeURIComponent(raw);
 
-  const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
-  const container = document.getElementById("analytics");
+        const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+        const container = document.getElementById("analytics");
 
-  if(!stats[cardKey] || !stats[cardKey].attempts){
-    container.innerHTML = "<div class='empty'>Chưa có dữ liệu</div>";
-    return;
-  }
+        if (!stats[cardKey] || !stats[cardKey].attempts) {
+            container.innerHTML = "<div class='empty'>Chưa có dữ liệu</div>";
+            return;
+        }
 
-  const attempts = stats[cardKey].attempts;
-  const recent = attempts.slice(-5);
+        const attempts = stats[cardKey].attempts;
+        const recent = attempts.slice(-5);
 
-  const avg = attempts.reduce((a,b)=>a+b,0)/attempts.length;
-  const last = attempts[attempts.length-1];
+        const avg = attempts.reduce((a, b) => a + b, 0) / attempts.length;
+        const last = attempts[attempts.length - 1];
 
-  // 📉 TREND
-  let trendText = "➡️ Ổn định";
-  if(last < avg) trendText = "📉 Đang cải thiện";
-  if(last > avg) trendText = "📈 Đang tệ hơn";
+        // 📉 TREND
+        let trendText = "➡️ Ổn định";
+        if (last < avg) trendText = "📉 Đang cải thiện";
+        if (last > avg) trendText = "📈 Đang tệ hơn";
 
-  // 🔥 DIFFICULTY
-  const maxFail = 5;
-  const difficulty = Math.min(100, (avg / maxFail) * 100);
+        // 🔥 DIFFICULTY
+        const maxFail = 5;
+        const difficulty = Math.min(100, (avg / maxFail) * 100);
 
-  function renderBar(percent){
-    const total = 10;
-    const filled = Math.round((percent/100)*total);
-    return "█".repeat(filled) + "░".repeat(total-filled);
-  }
+        function renderBar(percent) {
+            const total = 10;
+            const filled = Math.round((percent / 100) * total);
+            return "█".repeat(filled) + "░".repeat(total - filled);
+        }
 
-  const diffBar = renderBar(difficulty);
+        const diffBar = renderBar(difficulty);
 
-  // 🧠 STABILITY
-  const mean = avg;
-  const variance = attempts.reduce((a,b)=>a + Math.pow(b-mean,2),0)/attempts.length;
+        // 🧠 STABILITY
+        const mean = avg;
+        const variance = attempts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / attempts.length;
 
-  let stability = "🧠 Ổn định";
-  if(variance > 2) stability = "⚠️ Không ổn định";
+        let stability = "🧠 Ổn định";
+        if (variance > 2) stability = "⚠️ Không ổn định";
 
-  // 🏷️ LEVEL
-  let level = "";
-  let levelClass = "";
+        // 🏷️ LEVEL
+        let level = "";
+        let levelClass = "";
 
-  if(avg === 0){
-    level = "😎 Dễ";
-    levelClass = "good";
-  }
-  else if(avg <= 2){
-    level = "🙂 Ổn";
-    levelClass = "good";
-  }
-  else if(avg <= 4){
-    level = "⚠️ Khó";
-    levelClass = "bad";
-  }
-  else{
-    level = "💀 Rất khó";
-    levelClass = "bad";
-  }
+        if (avg === 0) {
+            level = "😎 Dễ";
+            levelClass = "good";
+        }
+        else if (avg <= 2) {
+            level = "🙂 Ổn";
+            levelClass = "good";
+        }
+        else if (avg <= 4) {
+            level = "⚠️ Khó";
+            levelClass = "bad";
+        }
+        else {
+            level = "💀 Rất khó";
+            levelClass = "bad";
+        }
 
-  // 🎯 UI
-  container.innerHTML = `
+        // 🎯 UI
+        container.innerHTML = `
     <div style="margin-top:10px">
 
       <div class="${levelClass}" style="margin-bottom:10px">
@@ -96,63 +96,63 @@
     </div>
   `;
 
-  // 🎨 DRAW CHART
-  function drawChart(){
+        // 🎨 DRAW CHART
+        function drawChart() {
 
-    const canvas = document.getElementById("chartCanvas");
-    if(!canvas) return;
+            const canvas = document.getElementById("chartCanvas");
+            if (!canvas) return;
 
-    const ctx = canvas.getContext("2d");
+            const ctx = canvas.getContext("2d");
 
-    const width = canvas.width = canvas.offsetWidth;
-    const height = canvas.height;
+            const width = canvas.width = canvas.offsetWidth;
+            const height = canvas.height;
 
-    ctx.clearRect(0,0,width,height);
+            ctx.clearRect(0, 0, width, height);
 
-    if(recent.length < 2) return;
+            if (recent.length < 2) return;
 
-    const max = Math.max(...recent, 5);
-    const stepX = width / (recent.length - 1);
+            const max = Math.max(...recent, 5);
+            const stepX = width / (recent.length - 1);
 
-    const color = last < avg ? "#22c55e" : "#ef4444";
+            const color = last < avg ? "#22c55e" : "#ef4444";
 
-    // 🔥 LINE
-    ctx.beginPath();
-    ctx.lineWidth = 2;
-    ctx.strokeStyle = color;
+            // 🔥 LINE
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = color;
 
-    recent.forEach((v,i)=>{
-      const x = i * stepX;
-      const y = height - (v / max) * height;
+            recent.forEach((v, i) => {
+                const x = i * stepX;
+                const y = height - (v / max) * height;
 
-      if(i === 0) ctx.moveTo(x,y);
-      else ctx.lineTo(x,y);
-    });
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
 
-    ctx.stroke();
+            ctx.stroke();
 
-    // 🔥 FILL
-    ctx.lineTo(width, height);
-    ctx.lineTo(0, height);
-    ctx.closePath();
+            // 🔥 FILL
+            ctx.lineTo(width, height);
+            ctx.lineTo(0, height);
+            ctx.closePath();
 
-    ctx.fillStyle = color + "22";
-    ctx.fill();
+            ctx.fillStyle = color + "22";
+            ctx.fill();
 
-    // 🔵 POINTS
-    recent.forEach((v,i)=>{
-      const x = i * stepX;
-      const y = height - (v / max) * height;
+            // 🔵 POINTS
+            recent.forEach((v, i) => {
+                const x = i * stepX;
+                const y = height - (v / max) * height;
 
-      ctx.beginPath();
-      ctx.arc(x,y,3,0,Math.PI*2);
-      ctx.fillStyle = color;
-      ctx.fill();
-    });
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+            });
 
-  }
+        }
 
-  setTimeout(drawChart, 100);
+        setTimeout(drawChart, 100);
 
-})();
+    })();
 </script>
