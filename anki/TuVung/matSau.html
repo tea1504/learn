@@ -7,100 +7,100 @@
 </div>
 
 <script>
-(function () {
+    (function () {
 
-    /* =========================
-       🛡️ SAFE DATA
-    ========================= */
-    const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
-    if (!raw) return;
+        /* =========================
+           🛡️ SAFE DATA
+        ========================= */
+        const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
+        if (!raw) return;
 
-    const cardKey = encodeURIComponent(raw);
+        const cardKey = encodeURIComponent(raw);
 
-    const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
-    const container = document.getElementById("analytics");
+        const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+        const container = document.getElementById("analytics");
 
-    if (!stats[cardKey] || !stats[cardKey].attempts) {
-        container.innerHTML = "<div class='empty'>Chưa có dữ liệu</div>";
-        return;
-    }
+        if (!stats[cardKey] || !stats[cardKey].attempts) {
+            container.innerHTML = "<div class='empty'>Chưa có dữ liệu</div>";
+            return;
+        }
 
-    const attempts = stats[cardKey].attempts;
-    const recent = attempts.slice(-5);
+        const attempts = stats[cardKey].attempts;
+        const recent = attempts.slice(-5);
 
-    /* =========================
-       📊 STATS
-    ========================= */
-    const avg = attempts.reduce((a, b) => a + b, 0) / attempts.length;
-    const last = attempts[attempts.length - 1];
-    const prev = attempts[attempts.length - 2];
+        /* =========================
+           📊 STATS
+        ========================= */
+        const avg = attempts.reduce((a, b) => a + b, 0) / attempts.length;
+        const last = attempts[attempts.length - 1];
+        const prev = attempts[attempts.length - 2];
 
-    /* =========================
-       📉 TREND (so với lần trước)
-    ========================= */
-    let trendText = "➡️ Ổn định";
-    if (prev !== undefined) {
-        if (last < prev) trendText = "📉 Đang cải thiện";
-        else if (last > prev) trendText = "📈 Đang tệ hơn";
-    }
+        /* =========================
+           📉 TREND (so với lần trước)
+        ========================= */
+        let trendText = "➡️ Ổn định";
+        if (prev !== undefined) {
+            if (last < prev) trendText = "📉 Đang cải thiện";
+            else if (last > prev) trendText = "📈 Đang tệ hơn";
+        }
 
-    /* =========================
-       🔥 DIFFICULTY
-    ========================= */
-    const maxFail = 3;
-    const difficulty = Math.min(100, (avg / maxFail) * 100);
+        /* =========================
+           🔥 DIFFICULTY
+        ========================= */
+        const maxFail = 3;
+        const difficulty = Math.min(100, (avg / maxFail) * 100);
 
-    function renderBar(percent) {
-        const total = 10;
-        const filled = Math.round((percent / 100) * total);
-        return "█".repeat(filled) + "░".repeat(total - filled);
-    }
+        function renderBar(percent) {
+            const total = 10;
+            const filled = Math.round((percent / 100) * total);
+            return "█".repeat(filled) + "░".repeat(total - filled);
+        }
 
-    const diffBar = renderBar(difficulty);
+        const diffBar = renderBar(difficulty);
 
-    /* =========================
-       🧠 VARIANCE (sample)
-    ========================= */
-    const mean = avg;
-    const variance = attempts.length > 1
-        ? attempts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (attempts.length - 1)
-        : 0;
+        /* =========================
+           🧠 VARIANCE (sample)
+        ========================= */
+        const mean = avg;
+        const variance = attempts.length > 1
+            ? attempts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (attempts.length - 1)
+            : 0;
 
-    let stability = variance > 2 ? "⚠️ Không ổn định" : "🧠 Ổn định";
+        let stability = variance > 2 ? "⚠️ Không ổn định" : "🧠 Ổn định";
 
-    /* =========================
-       🔥 STREAK
-    ========================= */
-    let streak = 0;
-    for (let i = attempts.length - 1; i >= 0; i--) {
-        if (attempts[i] === 0) streak++;
-        else break;
-    }
+        /* =========================
+           🔥 STREAK
+        ========================= */
+        let streak = 0;
+        for (let i = attempts.length - 1; i >= 0; i--) {
+            if (attempts[i] === 0) streak++;
+            else break;
+        }
 
-    /* =========================
-       🏷️ LEVEL
-    ========================= */
-    let level = "";
-    let levelClass = "";
+        /* =========================
+           🏷️ LEVEL
+        ========================= */
+        let level = "";
+        let levelClass = "";
 
-    if (avg === 0) {
-        level = "😎 Dễ";
-        levelClass = "good";
-    } else if (avg <= 2) {
-        level = "🙂 Ổn";
-        levelClass = "good";
-    } else if (avg <= 4) {
-        level = "⚠️ Khó";
-        levelClass = "bad";
-    } else {
-        level = "💀 Rất khó";
-        levelClass = "bad";
-    }
+        if (avg === 0) {
+            level = "😎 Dễ";
+            levelClass = "good";
+        } else if (avg <= 2) {
+            level = "🙂 Ổn";
+            levelClass = "good";
+        } else if (avg <= 4) {
+            level = "⚠️ Khó";
+            levelClass = "bad";
+        } else {
+            level = "💀 Rất khó";
+            levelClass = "bad";
+        }
 
-    /* =========================
-       🎯 UI
-    ========================= */
-    container.innerHTML = `
+        /* =========================
+           🎯 UI
+        ========================= */
+        container.innerHTML = `
         <div>
 
             <div class="${levelClass}">
@@ -124,72 +124,94 @@
         </div>
     `;
 
-    /* =========================
-       🎨 DRAW CHART (fix blur + width)
-    ========================= */
-    function drawChart() {
-        const canvas = document.getElementById("chartCanvas");
-        if (!canvas) return;
+        /* =========================
+           🎨 DRAW CHART (fix blur + width)
+        ========================= */
+        function drawChart() {
+            const canvas = document.getElementById("chartCanvas");
+            if (!canvas) return;
 
-        const ctx = canvas.getContext("2d");
+            const ctx = canvas.getContext("2d");
 
-        const width = canvas.parentElement.offsetWidth || 300;
-        const height = canvas.height;
+            // 🔥 FIX 1: fallback width (quan trọng nhất)
+            let width = canvas.parentElement.offsetWidth;
 
-        // fix blur retina
-        const ratio = window.devicePixelRatio || 1;
-        canvas.width = width * ratio;
-        canvas.height = height * ratio;
-        canvas.style.width = width + "px";
-        canvas.style.height = height + "px";
-        ctx.scale(ratio, ratio);
+            if (!width || width === 0) {
+                width = 300; // fallback tránh crash
+            }
 
-        ctx.clearRect(0, 0, width, height);
+            const height = 80;
 
-        if (recent.length < 2) return;
+            // 🔥 FIX 2: retina scale chuẩn
+            const ratio = window.devicePixelRatio || 1;
 
-        const max = Math.max(...recent, 5);
-        const stepX = width / (recent.length - 1);
+            canvas.width = width * ratio;
+            canvas.height = height * ratio;
+            canvas.style.width = width + "px";
+            canvas.style.height = height + "px";
 
-        const color = last < avg ? "#22c55e" : "#ef4444";
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
 
-        ctx.beginPath();
-        ctx.lineWidth = 2;
-        ctx.strokeStyle = color;
+            ctx.clearRect(0, 0, width, height);
 
-        recent.forEach((v, i) => {
-            const x = i * stepX;
-            const y = height - (v / max) * height;
+            // 🔥 FIX 3: nếu chỉ có 1 điểm → vẫn vẽ
+            if (recent.length === 1) {
+                const x = width / 2;
+                const y = height - (recent[0] / 5) * height;
 
-            if (i === 0) ctx.moveTo(x, y);
-            else ctx.lineTo(x, y);
-        });
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = "#3b82f6";
+                ctx.fill();
 
-        ctx.stroke();
+                return;
+            }
 
-        // fill
-        ctx.lineTo(width, height);
-        ctx.lineTo(0, height);
-        ctx.closePath();
-        ctx.fillStyle = color + "22";
-        ctx.fill();
+            if (recent.length < 1) return;
 
-        // points
-        recent.forEach((v, i) => {
-            const x = i * stepX;
-            const y = height - (v / max) * height;
+            const max = Math.max(...recent, 5);
+            const stepX = width / (recent.length - 1);
 
+            const color = last < avg ? "#22c55e" : "#ef4444";
+
+            // LINE
             ctx.beginPath();
-            ctx.arc(x, y, 3, 0, Math.PI * 2);
-            ctx.fillStyle = color;
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = color;
+
+            recent.forEach((v, i) => {
+                const x = i * stepX;
+                const y = height - (v / max) * height;
+
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+
+            ctx.stroke();
+
+            // FILL
+            ctx.lineTo(width, height);
+            ctx.lineTo(0, height);
+            ctx.closePath();
+            ctx.fillStyle = color + "22";
             ctx.fill();
+
+            // POINTS
+            recent.forEach((v, i) => {
+                const x = i * stepX;
+                const y = height - (v / max) * height;
+
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+            });
+        }
+
+        // đảm bảo DOM render xong
+        requestAnimationFrame(() => {
+            requestAnimationFrame(drawChart);
         });
-    }
 
-    // đảm bảo DOM render xong
-    requestAnimationFrame(() => {
-        requestAnimationFrame(drawChart);
-    });
-
-})();
+    })();
 </script>
