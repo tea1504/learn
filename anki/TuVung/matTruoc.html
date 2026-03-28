@@ -139,9 +139,6 @@
 
                 fail = 0;
                 hint.innerHTML = "";
-
-                // UX: clear input
-                input.value = "";
             } else {
                 result.innerHTML = "❌ NOT PASS";
                 fail++;
@@ -176,11 +173,9 @@
             if (e.key === "Enter") handle();
         });
 
-        requestAnimationFrame(() => {
-            setTimeout(() => {
-                input.focus();
-            }, 100);
-        });
+        setTimeout(() => {
+            input.focus();
+        }, 300);
 
     })();
 </script>
