@@ -7,152 +7,189 @@
 </div>
 
 <script>
-    (function () {
+(function () {
 
-        const raw = `{{Mặt trước}}`;
-        const cardKey = encodeURIComponent(raw);
+    /* =========================
+       🛡️ SAFE DATA
+    ========================= */
+    const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
+    if (!raw) return;
 
-        const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
-        const container = document.getElementById("analytics");
+    const cardKey = encodeURIComponent(raw);
 
-        if (!stats[cardKey] || !stats[cardKey].attempts) {
-            container.innerHTML = "<div class='empty'>Chưa có dữ liệu</div>";
-            return;
-        }
+    const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+    const container = document.getElementById("analytics");
 
-        const attempts = stats[cardKey].attempts;
-        const recent = attempts.slice(-5);
+    if (!stats[cardKey] || !stats[cardKey].attempts) {
+        container.innerHTML = "<div class='empty'>Chưa có dữ liệu</div>";
+        return;
+    }
 
-        const avg = attempts.reduce((a, b) => a + b, 0) / attempts.length;
-        const last = attempts[attempts.length - 1];
+    const attempts = stats[cardKey].attempts;
+    const recent = attempts.slice(-5);
 
-        // 📉 TREND
-        let trendText = "➡️ Ổn định";
-        if (last < avg) trendText = "📉 Đang cải thiện";
-        if (last > avg) trendText = "📈 Đang tệ hơn";
+    /* =========================
+       📊 STATS
+    ========================= */
+    const avg = attempts.reduce((a, b) => a + b, 0) / attempts.length;
+    const last = attempts[attempts.length - 1];
+    const prev = attempts[attempts.length - 2];
 
-        // 🔥 DIFFICULTY
-        const maxFail = 5;
-        const difficulty = Math.min(100, (avg / maxFail) * 100);
+    /* =========================
+       📉 TREND (so với lần trước)
+    ========================= */
+    let trendText = "➡️ Ổn định";
+    if (prev !== undefined) {
+        if (last < prev) trendText = "📉 Đang cải thiện";
+        else if (last > prev) trendText = "📈 Đang tệ hơn";
+    }
 
-        function renderBar(percent) {
-            const total = 10;
-            const filled = Math.round((percent / 100) * total);
-            return "█".repeat(filled) + "░".repeat(total - filled);
-        }
+    /* =========================
+       🔥 DIFFICULTY
+    ========================= */
+    const maxFail = 3;
+    const difficulty = Math.min(100, (avg / maxFail) * 100);
 
-        const diffBar = renderBar(difficulty);
+    function renderBar(percent) {
+        const total = 10;
+        const filled = Math.round((percent / 100) * total);
+        return "█".repeat(filled) + "░".repeat(total - filled);
+    }
 
-        // 🧠 STABILITY
-        const mean = avg;
-        const variance = attempts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / attempts.length;
+    const diffBar = renderBar(difficulty);
 
-        let stability = "🧠 Ổn định";
-        if (variance > 2) stability = "⚠️ Không ổn định";
+    /* =========================
+       🧠 VARIANCE (sample)
+    ========================= */
+    const mean = avg;
+    const variance = attempts.length > 1
+        ? attempts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (attempts.length - 1)
+        : 0;
 
-        // 🏷️ LEVEL
-        let level = "";
-        let levelClass = "";
+    let stability = variance > 2 ? "⚠️ Không ổn định" : "🧠 Ổn định";
 
-        if (avg === 0) {
-            level = "😎 Dễ";
-            levelClass = "good";
-        }
-        else if (avg <= 2) {
-            level = "🙂 Ổn";
-            levelClass = "good";
-        }
-        else if (avg <= 4) {
-            level = "⚠️ Khó";
-            levelClass = "bad";
-        }
-        else {
-            level = "💀 Rất khó";
-            levelClass = "bad";
-        }
+    /* =========================
+       🔥 STREAK
+    ========================= */
+    let streak = 0;
+    for (let i = attempts.length - 1; i >= 0; i--) {
+        if (attempts[i] === 0) streak++;
+        else break;
+    }
 
-        // 🎯 UI
-        container.innerHTML = `
-    <div style="margin-top:10px">
+    /* =========================
+       🏷️ LEVEL
+    ========================= */
+    let level = "";
+    let levelClass = "";
 
-      <div class="${levelClass}" style="margin-bottom:10px">
-        ${level}
-      </div>
+    if (avg === 0) {
+        level = "😎 Dễ";
+        levelClass = "good";
+    } else if (avg <= 2) {
+        level = "🙂 Ổn";
+        levelClass = "good";
+    } else if (avg <= 4) {
+        level = "⚠️ Khó";
+        levelClass = "bad";
+    } else {
+        level = "💀 Rất khó";
+        levelClass = "bad";
+    }
 
-      <div>📊 Tiến bộ:</div>
-      <canvas id="chartCanvas" height="80"></canvas>
+    /* =========================
+       🎯 UI
+    ========================= */
+    container.innerHTML = `
+        <div>
 
-      <div style="margin-top:8px">${trendText}</div>
+            <div class="${levelClass}">
+                ${level}
+            </div>
 
-      <div style="margin-top:10px">
-        🔥 Độ khó:
-        <div>${diffBar} ${difficulty.toFixed(0)}%</div>
-      </div>
+            <div>🔥 Streak: ${streak}</div>
 
-      <div style="margin-top:10px">
-        ${stability}
-      </div>
+            <div>📊 Tiến bộ:</div>
+            <canvas id="chartCanvas" height="80"></canvas>
 
-    </div>
-  `;
+            <div>${trendText}</div>
 
-        // 🎨 DRAW CHART
-        function drawChart() {
+            <div>
+                🔥 Độ khó:
+                <div>${diffBar} ${difficulty.toFixed(0)}%</div>
+            </div>
 
-            const canvas = document.getElementById("chartCanvas");
-            if (!canvas) return;
+            <div>${stability}</div>
 
-            const ctx = canvas.getContext("2d");
+        </div>
+    `;
 
-            const width = canvas.width = canvas.offsetWidth;
-            const height = canvas.height;
+    /* =========================
+       🎨 DRAW CHART (fix blur + width)
+    ========================= */
+    function drawChart() {
+        const canvas = document.getElementById("chartCanvas");
+        if (!canvas) return;
 
-            ctx.clearRect(0, 0, width, height);
+        const ctx = canvas.getContext("2d");
 
-            if (recent.length < 2) return;
+        const width = canvas.parentElement.offsetWidth || 300;
+        const height = canvas.height;
 
-            const max = Math.max(...recent, 5);
-            const stepX = width / (recent.length - 1);
+        // fix blur retina
+        const ratio = window.devicePixelRatio || 1;
+        canvas.width = width * ratio;
+        canvas.height = height * ratio;
+        canvas.style.width = width + "px";
+        canvas.style.height = height + "px";
+        ctx.scale(ratio, ratio);
 
-            const color = last < avg ? "#22c55e" : "#ef4444";
+        ctx.clearRect(0, 0, width, height);
 
-            // 🔥 LINE
+        if (recent.length < 2) return;
+
+        const max = Math.max(...recent, 5);
+        const stepX = width / (recent.length - 1);
+
+        const color = last < avg ? "#22c55e" : "#ef4444";
+
+        ctx.beginPath();
+        ctx.lineWidth = 2;
+        ctx.strokeStyle = color;
+
+        recent.forEach((v, i) => {
+            const x = i * stepX;
+            const y = height - (v / max) * height;
+
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
+        });
+
+        ctx.stroke();
+
+        // fill
+        ctx.lineTo(width, height);
+        ctx.lineTo(0, height);
+        ctx.closePath();
+        ctx.fillStyle = color + "22";
+        ctx.fill();
+
+        // points
+        recent.forEach((v, i) => {
+            const x = i * stepX;
+            const y = height - (v / max) * height;
+
             ctx.beginPath();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = color;
-
-            recent.forEach((v, i) => {
-                const x = i * stepX;
-                const y = height - (v / max) * height;
-
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-
-            ctx.stroke();
-
-            // 🔥 FILL
-            ctx.lineTo(width, height);
-            ctx.lineTo(0, height);
-            ctx.closePath();
-
-            ctx.fillStyle = color + "22";
+            ctx.arc(x, y, 3, 0, Math.PI * 2);
+            ctx.fillStyle = color;
             ctx.fill();
+        });
+    }
 
-            // 🔵 POINTS
-            recent.forEach((v, i) => {
-                const x = i * stepX;
-                const y = height - (v / max) * height;
+    // đảm bảo DOM render xong
+    requestAnimationFrame(() => {
+        requestAnimationFrame(drawChart);
+    });
 
-                ctx.beginPath();
-                ctx.arc(x, y, 3, 0, Math.PI * 2);
-                ctx.fillStyle = color;
-                ctx.fill();
-            });
-
-        }
-
-        setTimeout(drawChart, 100);
-
-    })();
+})();
 </script>

@@ -1,12 +1,31 @@
+/* =========================
+   🎯 GLOBAL
+========================= */
+* {
+    transition: all 0.15s ease;
+}
+
+/* =========================
+   🧱 CONTAINER
+========================= */
 .card-container {
     padding: 16px;
     max-width: 500px;
     margin: auto;
     text-align: center;
     font-family: system-ui, sans-serif;
+
+    /* glass effect */
+    background: rgba(255,255,255,0.7);
+    backdrop-filter: blur(10px);
+    border-radius: 16px;
+
+    min-height: 300px;
 }
 
-/* INPUT */
+/* =========================
+   ⌨️ INPUT
+========================= */
 input {
     width: 100%;
     padding: 12px;
@@ -14,6 +33,8 @@ input {
     border-radius: 12px;
     border: 2px solid #ccc;
     font-size: 16px;
+
+    -webkit-appearance: none;
 }
 
 input:focus {
@@ -22,7 +43,9 @@ input:focus {
     box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
 }
 
-/* BUTTON */
+/* =========================
+   🔘 BUTTON
+========================= */
 button {
     width: 100%;
     padding: 12px;
@@ -31,7 +54,8 @@ button {
     background: #3b82f6;
     color: white;
     font-size: 16px;
-    transition: 0.2s;
+
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
 }
 
 button:hover {
@@ -40,28 +64,20 @@ button:hover {
 
 button:active {
     transform: scale(0.97);
+    box-shadow: 0 2px 5px rgba(0,0,0,0.15);
 }
 
-/* RESULT */
+/* =========================
+   📊 RESULT
+========================= */
 #result {
     margin-top: 10px;
     font-weight: bold;
-    animation: fadeIn 0.3s ease;
 }
 
-@keyframes fadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(5px);
-    }
-
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* HINT */
+/* =========================
+   💡 HINT
+========================= */
 #hint {
     margin-top: 10px;
     padding: 12px;
@@ -70,22 +86,37 @@ button:active {
     border: 1px solid #e2e8f0;
 }
 
-/* TEXT COLORS */
+.answer-hint {
+    color: #22c55e;
+    font-weight: bold;
+}
+
+.hint-sub {
+    font-size: 13px;
+    opacity: 0.7;
+}
+
+/* =========================
+   🎨 TEXT COLORS
+========================= */
 .correct {
     color: #22c55e;
     font-weight: bold;
 }
 
 .partial {
-    color: #eab308;
-    font-weight: bold;
+    color: #facc15;
+    text-decoration: underline;
 }
 
 .missing {
-    color: #999;
+    color: #64748b;
+    opacity: 0.7;
 }
 
-/* STATUS */
+/* =========================
+   🏷️ STATUS
+========================= */
 .good,
 .bad {
     padding: 10px;
@@ -104,42 +135,36 @@ button:active {
     color: #991b1b;
 }
 
-/* TABLE */
-.stat-table {
+/* =========================
+   📉 CHART
+========================= */
+canvas {
     width: 100%;
-    margin-top: 12px;
-    border-collapse: collapse;
-    border-radius: 12px;
-    overflow: hidden;
+    height: 80px;
+    display: block;
+    margin-top: 6px;
 }
 
-.stat-table th {
-    background: #3b82f6;
-    color: white;
-    padding: 8px;
-}
-
-.stat-table td {
-    padding: 8px;
-    border-bottom: 1px solid #eee;
-}
-
-.stat-table tr:last-child td {
-    border-bottom: none;
-}
-
-/* EMPTY */
+/* =========================
+   💤 EMPTY
+========================= */
 .empty {
     opacity: 0.6;
     margin-top: 10px;
 }
 
-/* DARK MODE */
+/* =========================
+   🌙 DARK MODE
+========================= */
 @media (prefers-color-scheme: dark) {
 
     body {
         background: #0f172a;
         color: #e2e8f0;
+    }
+
+    .card-container {
+        background: rgba(30,41,59,0.7);
     }
 
     input {
@@ -153,15 +178,11 @@ button:active {
         border-color: #334155;
     }
 
-    .stat-table td {
-        border-bottom: 1px solid #334155;
+    button {
+        background: #3b82f6;
     }
 
-}
-
-canvas {
-    width: 100%;
-    height: 80px;
-    display: block;
-    margin-top: 6px;
+    button:hover {
+        background: #60a5fa;
+    }
 }
