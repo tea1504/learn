@@ -99,21 +99,28 @@ button:active {
 }
 
 /* =========================
-   🎨 TEXT COLORS
+   🎨 TEXT + BACKGROUND
 ========================= */
+
+/* đúng */
 .correct {
-    color: #22c55e;
+    color: #166534;
     font-weight: bold;
+    background: #dcfce7; /* xanh pastel */
 }
 
-.partial {
-    color: #facc15;
-    text-decoration: underline;
+/* sai */
+.wrong {
+    color: #991b1b;
+    font-weight: bold;
+    background: #fee2e2; /* đỏ pastel */
 }
 
+/* thiếu */
 .missing {
-    color: #64748b;
-    opacity: 0.7;
+    color: #854d0e;           /* vàng đậm dễ đọc */
+    font-weight: bold;
+    background: #fef9c3;     /* vàng pastel nhẹ */
 }
 
 /* =========================

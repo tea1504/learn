@@ -25,7 +25,7 @@
         /* =========================
            ⚙️ CONFIG
         ========================= */
-        const SHOW_ANSWER_THRESHOLD = 3; // sai >= 3 lần thì show đáp án
+        const SHOW_ANSWER_THRESHOLD = 10; // sai >= 10 lần thì show đáp án
 
         /* =========================
            🛡️ SAFE DATA (tránh vỡ JS)
@@ -90,22 +90,73 @@
             const c = normalize(correct);
 
             let result = "";
+            let i = 0;
+            let j = 0;
 
-            for (let i = 0; i < c.length; i++) {
-                if (u[i] === c[i]) {
-                    result += `<span class="correct">${correct[i]}</span>`;
+            while (i < c.length && j < u.length) {
+
+                // ✅ đúng
+                if (u[j] === c[i]) {
+                    let chunk = "";
+
+                    while (i < c.length && j < u.length && u[j] === c[i]) {
+                        chunk += c[i];
+                        i++;
+                        j++;
+                    }
+
+                    result += `<span class="correct">${chunk}</span>`;
+                    continue;
                 }
-                else if (u.indexOf(c[i]) !== -1) {
-                    result += `<span class="partial">${correct[i]}</span>`;
+
+                // ❗ thử skip nhiều ký tự (thiếu)
+                let found = false;
+                for (let k = i + 1; k < c.length; k++) {
+                    if (u[j] === c[k]) {
+                        for (let m = i; m < k; m++) {
+                            result += `<span class="missing">_</span>`;
+                        }
+                        i = k;
+                        found = true;
+                        break;
+                    }
                 }
-                else {
+                if (found) continue;
+
+                // ❗ dư ký tự
+                while (j < u.length && u[j] !== c[i]) {
+                    result += `<span class="wrong">${u[j]}</span>`;
+                    j++;
+                }
+                continue;
+
+                // ❗ thiếu 1 ký tự
+                if (i + 1 < c.length && u[j] === c[i + 1]) {
                     result += `<span class="missing">_</span>`;
+                    i++;
+                    continue;
                 }
+
+                // ❗ sai thật
+                result += `<span class="wrong">${u[j]}</span>`;
+                i++;
+                j++;
+            }
+
+            // ❗ còn thiếu ở cuối
+            while (i < c.length) {
+                result += `<span class="missing">_</span>`;
+                i++;
+            }
+
+            // ❗ còn dư ở cuối
+            while (j < u.length) {
+                result += `<span class="wrong">${u[j]}</span>`;
+                j++;
             }
 
             return result;
         }
-
         /* =========================
            💾 SAVE STATS
            - giới hạn 50 lần để tránh phình bộ nhớ
@@ -150,8 +201,22 @@
 
                 let html = "";
 
-                answers.forEach((ans, i) => {
-                    html += generateMask(userInput.split(";")[i] || "", ans) + "<br>";
+                const userParts = userInput.split(";");
+
+                answers.forEach(ans => {
+
+                    let bestMatch = "";
+                    let bestScore = -1;
+
+                    userParts.forEach(p => {
+                        let score = similarity(normalize(p), normalize(ans));
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMatch = p;
+                        }
+                    });
+
+                    html += generateMask(bestMatch || "", ans) + "<br>";
                 });
 
                 if (fail >= SHOW_ANSWER_THRESHOLD) {
@@ -170,6 +235,17 @@
                 input.focus();
                 input.select();
             }
+        }
+
+        function similarity(a, b) {
+            let match = 0;
+            const len = Math.min(a.length, b.length);
+
+            for (let i = 0; i < len; i++) {
+                if (a[i] === b[i]) match++;
+            }
+
+            return match;
         }
 
         document.getElementById("submitBtn").onclick = handle;
