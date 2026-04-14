@@ -89,73 +89,72 @@
             const u = normalize(user);
             const c = normalize(correct);
 
-            let result = "";
-            let i = 0;
-            let j = 0;
+            const m = u.length;
+            const n = c.length;
 
-            while (i < c.length && j < u.length) {
+            // 🔥 DP LCS table
+            const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
 
-                // ✅ đúng
-                if (u[j] === c[i]) {
-                    let chunk = "";
-
-                    while (i < c.length && j < u.length && u[j] === c[i]) {
-                        chunk += c[i];
-                        i++;
-                        j++;
-                    }
-
-                    result += `<span class="correct">${chunk}</span>`;
-                    continue;
-                }
-
-                // ❗ thử skip nhiều ký tự (thiếu)
-                let found = false;
-                for (let k = i + 1; k < c.length; k++) {
-                    if (u[j] === c[k]) {
-                        for (let m = i; m < k; m++) {
-                            result += `<span class="missing">_</span>`;
-                        }
-                        i = k;
-                        found = true;
-                        break;
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    if (u[i - 1] === c[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1] + 1;
+                    } else {
+                        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
                     }
                 }
-                if (found) continue;
+            }
 
-                // ❗ dư ký tự
-                while (j < u.length && u[j] !== c[i]) {
-                    result += `<span class="wrong">${u[j]}</span>`;
-                    j++;
+            // 🔥 Backtrack để lấy match
+            let i = m, j = n;
+            let result = [];
+
+            while (i > 0 && j > 0) {
+
+                if (u[i - 1] === c[j - 1]) {
+                    result.push({
+                        type: "correct",
+                        char: c[j - 1]
+                    });
+                    i--;
+                    j--;
+                } else if (dp[i - 1][j] > dp[i][j - 1]) {
+                    result.push({
+                        type: "wrong",
+                        char: u[i - 1]
+                    });
+                    i--;
+                } else {
+                    result.push({
+                        type: "missing",
+                        char: "_"
+                    });
+                    j--;
                 }
-                continue;
-
-                // ❗ thiếu 1 ký tự
-                if (i + 1 < c.length && u[j] === c[i + 1]) {
-                    result += `<span class="missing">_</span>`;
-                    i++;
-                    continue;
-                }
-
-                // ❗ sai thật
-                result += `<span class="wrong">${u[j]}</span>`;
-                i++;
-                j++;
             }
 
-            // ❗ còn thiếu ở cuối
-            while (i < c.length) {
-                result += `<span class="missing">_</span>`;
-                i++;
+            while (i > 0) {
+                result.push({
+                    type: "wrong",
+                    char: u[i - 1]
+                });
+                i--;
             }
 
-            // ❗ còn dư ở cuối
-            while (j < u.length) {
-                result += `<span class="wrong">${u[j]}</span>`;
-                j++;
+            while (j > 0) {
+                result.push({
+                    type: "missing",
+                    char: "_"
+                });
+                j--;
             }
 
-            return result;
+            result.reverse();
+
+            // 🔥 Render HTML
+            return result.map(x => {
+                return `<span class="${x.type}">${x.char}</span>`;
+            }).join("");
         }
         /* =========================
            💾 SAVE STATS
