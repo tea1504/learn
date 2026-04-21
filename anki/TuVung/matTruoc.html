@@ -1,16 +1,6 @@
 <div class="card-container">
 
-    <!-- =========================
-         VERSION INFO
-         v3.0.0 - 2026-04-21
-         - chuyển sang error-based stats
-         - dùng LCS để tính số lỗi
-         - fix duplicate loop
-         - remove fail logic
-         - clean code
-    ========================= -->
-
-    <!-- Hiển thị đáp án -->
+    <!-- Hiển thị đáp án (ẩn/hiện tùy logic Anki) -->
     <div class="answer">{{Mặt sau}}</div>
 
     <!-- Typing của Anki -->
@@ -18,7 +8,7 @@
         {{type:Mặt trước}}
     </div>
 
-    <!-- Input -->
+    <!-- Input custom -->
     <div class="custom-input">
         <input id="myInput" placeholder="Nhập..." />
         <button id="submitBtn">Submit</button>
@@ -33,22 +23,37 @@
     (function () {
 
         /* =========================
-           🛡️ SAFE DATA
+           ⚙️ CONFIG
+        ========================= */
+        const SHOW_ANSWER_THRESHOLD = 10; // sai >= 10 lần thì show đáp án
+
+        /* =========================
+           🛡️ SAFE DATA (tránh vỡ JS)
+           - remove xuống dòng
+           - encode key để lưu localStorage
         ========================= */
         const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
         if (!raw) return;
 
         const cardKey = encodeURIComponent(raw);
 
+        let fail = 0;
+
         /* =========================
            🔤 NORMALIZE
+           - lower case
+           - bỏ khoảng trắng
         ========================= */
         function normalize(s) {
-            return (s || "").toLowerCase().replace(/\s+/g, "");
+            return s.toLowerCase().replace(/\s+/g, "");
         }
 
         /* =========================
            📚 PARSE ANSWERS
+           format:
+           食べる/taberu; 飲む/nomu
+           hoặc
+           食べる; 飲む
         ========================= */
         function parseAnswers(str) {
             return str.split(";").map(x => {
@@ -62,8 +67,175 @@
         const answers = parseAnswers(raw);
 
         /* =========================
-           🧠 SIMILARITY (best match)
+           ✅ CHECK ĐÁP ÁN (không cần đúng thứ tự)
         ========================= */
+        function isCorrect(input) {
+            const parts = input.split(";")
+                .map(x => normalize(x))
+                .filter(Boolean);
+
+            if (parts.length !== answers.length) return false;
+
+            const sortedInput = [...parts].sort();
+            const sortedAnswers = answers.map(a => normalize(a)).sort();
+
+            return sortedInput.every((p, i) => p === sortedAnswers[i]);
+        }
+
+        /* =========================
+           🧩 GỢI Ý TỪNG CHỮ
+        ========================= */
+        function generateMask(user, correct) {
+            const u = normalize(user);
+            const c = normalize(correct);
+
+            const m = u.length;
+            const n = c.length;
+
+            // 🔥 DP LCS table
+            const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    if (u[i - 1] === c[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1] + 1;
+                    } else {
+                        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+                    }
+                }
+            }
+
+            // 🔥 Backtrack để lấy match
+            let i = m, j = n;
+            let result = [];
+
+            while (i > 0 && j > 0) {
+
+                if (u[i - 1] === c[j - 1]) {
+                    result.push({
+                        type: "correct",
+                        char: c[j - 1]
+                    });
+                    i--;
+                    j--;
+                } else if (dp[i - 1][j] > dp[i][j - 1]) {
+                    result.push({
+                        type: "wrong",
+                        char: u[i - 1]
+                    });
+                    i--;
+                } else {
+                    result.push({
+                        type: "missing",
+                        char: "_"
+                    });
+                    j--;
+                }
+            }
+
+            while (i > 0) {
+                result.push({
+                    type: "wrong",
+                    char: u[i - 1]
+                });
+                i--;
+            }
+
+            while (j > 0) {
+                result.push({
+                    type: "missing",
+                    char: "_"
+                });
+                j--;
+            }
+
+            result.reverse();
+
+            // 🔥 Render HTML
+            return result.map(x => {
+                return `<span class="${x.type}">${x.char}</span>`;
+            }).join("");
+        }
+        /* =========================
+           💾 SAVE STATS
+           - giới hạn 50 lần để tránh phình bộ nhớ
+        ========================= */
+        function saveStats(fail) {
+            let stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+
+            if (!stats[cardKey]) {
+                stats[cardKey] = { attempts: [] };
+            }
+
+            stats[cardKey].attempts.push(fail);
+
+            if (stats[cardKey].attempts.length > 50) {
+                stats[cardKey].attempts.shift();
+            }
+
+            localStorage.setItem("cardStats", JSON.stringify(stats));
+        }
+
+        const input = document.getElementById("myInput");
+        const result = document.getElementById("result");
+        const hint = document.getElementById("hint");
+
+        /* =========================
+           🎯 HANDLE SUBMIT
+        ========================= */
+        function handle() {
+
+            const userInput = input.value;
+
+            if (isCorrect(userInput)) {
+                result.innerHTML = "✅ PASS";
+
+                saveStats(fail);
+
+                fail = 0;
+                hint.innerHTML = "";
+            } else {
+                result.innerHTML = "❌ NOT PASS";
+                fail++;
+
+                let html = "";
+
+                const userParts = userInput.split(";");
+
+                answers.forEach(ans => {
+
+                    let bestMatch = "";
+                    let bestScore = -1;
+
+                    userParts.forEach(p => {
+                        let score = similarity(normalize(p), normalize(ans));
+                        if (score > bestScore) {
+                            bestScore = score;
+                            bestMatch = p;
+                        }
+                    });
+
+                    html += generateMask(bestMatch || "", ans) + "<br>";
+                });
+
+                if (fail >= SHOW_ANSWER_THRESHOLD) {
+                    hint.innerHTML = `
+                    <div class="answer-hint">
+                        💡 ${answers.join("; ")}
+                    </div>
+                    <div class="hint-sub">
+                        Nhập lại để nhớ nhé
+                    </div>
+                `;
+                } else {
+                    hint.innerHTML = html;
+                }
+
+                input.focus();
+                input.select();
+            }
+        }
+
         function similarity(a, b) {
             let match = 0;
             const len = Math.min(a.length, b.length);
@@ -75,171 +247,10 @@
             return match;
         }
 
-        /* =========================
-           🔥 LCS ERROR COUNT
-        ========================= */
-        function countErrors(user, correct) {
-
-            const u = normalize(user);
-            const c = normalize(correct);
-
-            const m = u.length;
-            const n = c.length;
-
-            const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-
-            for (let i = 1; i <= m; i++) {
-                for (let j = 1; j <= n; j++) {
-                    if (u[i - 1] === c[j - 1]) {
-                        dp[i][j] = dp[i - 1][j - 1] + 1;
-                    } else {
-                        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-                    }
-                }
-            }
-
-            const lcs = dp[m][n];
-
-            // lỗi = dư + thiếu
-            return (m - lcs) + (n - lcs);
-        }
-
-        /* =========================
-           🎨 GENERATE MASK (LCS)
-        ========================= */
-        function generateMask(user, correct) {
-
-            const u = normalize(user);
-            const c = normalize(correct);
-
-            const m = u.length;
-            const n = c.length;
-
-            const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-
-            for (let i = 1; i <= m; i++) {
-                for (let j = 1; j <= n; j++) {
-                    if (u[i - 1] === c[j - 1]) {
-                        dp[i][j] = dp[i - 1][j - 1] + 1;
-                    } else {
-                        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-                    }
-                }
-            }
-
-            let i = m, j = n;
-            let result = [];
-
-            while (i > 0 && j > 0) {
-                if (u[i - 1] === c[j - 1]) {
-                    result.push({ type: "correct", char: c[j - 1] });
-                    i--; j--;
-                } else if (dp[i - 1][j] > dp[i][j - 1]) {
-                    result.push({ type: "wrong", char: u[i - 1] });
-                    i--;
-                } else {
-                    result.push({ type: "missing", char: "_" });
-                    j--;
-                }
-            }
-
-            while (i > 0) {
-                result.push({ type: "wrong", char: u[i - 1] });
-                i--;
-            }
-
-            while (j > 0) {
-                result.push({ type: "missing", char: "_" });
-                j--;
-            }
-
-            result.reverse();
-
-            return result.map(x =>
-                `<span class="${x.type}">${x.char}</span>`
-            ).join("");
-        }
-
-        /* =========================
-           💾 SAVE STATS
-        ========================= */
-        function saveStats(value) {
-            let stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
-
-            if (!stats[cardKey]) {
-                stats[cardKey] = { attempts: [] };
-            }
-
-            stats[cardKey].attempts.push(value);
-
-            if (stats[cardKey].attempts.length > 50) {
-                stats[cardKey].attempts.shift();
-            }
-
-            localStorage.setItem("cardStats", JSON.stringify(stats));
-        }
-
-        /* =========================
-           🎯 HANDLE
-        ========================= */
-        const input = document.getElementById("myInput");
-        const result = document.getElementById("result");
-        const hint = document.getElementById("hint");
-
-        function handle() {
-
-            const userInput = input.value;
-            const userParts = userInput.split(";");
-
-            let totalError = 0;
-            let html = "";
-
-            answers.forEach(ans => {
-
-                let bestMatch = "";
-                let bestScore = -1;
-
-                userParts.forEach(p => {
-                    let score = similarity(normalize(p), normalize(ans));
-                    if (score > bestScore) {
-                        bestScore = score;
-                        bestMatch = p;
-                    }
-                });
-
-                const err = countErrors(bestMatch || "", ans);
-                totalError += err;
-
-                html += generateMask(bestMatch || "", ans) + "<br>";
-            });
-
-            if (totalError === 0) {
-                result.innerHTML = "✅ PASS";
-                hint.innerHTML = "";
-            } else {
-                result.innerHTML = "❌ NOT PASS";
-                hint.innerHTML = html;
-            }
-
-            // 🔥 lưu mỗi lần submit
-            saveStats(totalError);
-
-            input.focus();
-            input.select();
-        }
-
         document.getElementById("submitBtn").onclick = handle;
-
-        input.addEventListener("keydown", e => {
-            if (e.key === "Enter") handle();
-        });
-
+        input.addEventListener("keydown", e => { if (e.key === "Enter") handle(); });
         input.addEventListener("focus", () => input.select());
-
-        setTimeout(() => {
-            input.focus();
-            input.select();
-        }, 100);
+        setTimeout(() => { input.focus(); input.select(); }, 100);
 
     })();
 </script>

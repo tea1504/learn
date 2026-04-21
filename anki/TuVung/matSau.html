@@ -27,7 +27,7 @@
         }
 
         const attempts = stats[cardKey].attempts;
-        const recent = attempts;
+        const recent = attempts.slice(-5);
 
         /* =========================
            📊 STATS
@@ -109,9 +109,7 @@
             <div>🔥 Streak: ${streak}</div>
 
             <div>📊 Tiến bộ:</div>
-            <div id="chartWrapper">
-                <canvas id="chartCanvas"></canvas>
-            </div>
+            <canvas id="chartCanvas" height="80"></canvas>
 
             <div>${trendText}</div>
 
