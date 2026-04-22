@@ -70,8 +70,9 @@
            ✅ CHECK ĐÁP ÁN (không cần đúng thứ tự)
         ========================= */
         function isCorrect(input) {
+
             const parts = input.split(";")
-                .map(x => normalize(x))
+                .map(x => normalize(x)) // normalize = bỏ space
                 .filter(Boolean);
 
             if (parts.length !== answers.length) return false;
@@ -86,13 +87,42 @@
            🧩 GỢI Ý TỪNG CHỮ
         ========================= */
         function generateMask(user, correct) {
+            if (isNoSpaceMatch(user, correct)) {
+                return `<span class="correct">${correct}</span>`;
+            }
+
+            const userWords = splitUserByCorrect(user, correct);
+            const correctWords = correct.trim().split(/\s+/);
+
+            let result = "";
+
+            correctWords.forEach((cw, i) => {
+                const uw = userWords[i] || "";
+                result += generateMaskChar(uw, cw) + " ";
+            });
+
+            // 🔥 FIX: xử lý phần dư của user
+            const normalizedUser = normalize(user);
+            const totalLen = correctWords.reduce((a, w) => a + w.length, 0);
+
+            if (normalizedUser.length > totalLen) {
+                const extra = normalizedUser.slice(totalLen);
+
+                result += extra.split("").map(c =>
+                    `<span class="wrong">${c}</span>`
+                ).join("");
+            }
+
+            return result.trim();
+        }
+
+        function generateMaskChar(user, correct) {
             const u = normalize(user);
             const c = normalize(correct);
 
             const m = u.length;
             const n = c.length;
 
-            // 🔥 DP LCS table
             const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
 
             for (let i = 1; i <= m; i++) {
@@ -105,59 +135,86 @@
                 }
             }
 
-            // 🔥 Backtrack để lấy match
             let i = m, j = n;
             let result = [];
 
             while (i > 0 && j > 0) {
-
                 if (u[i - 1] === c[j - 1]) {
-                    result.push({
-                        type: "correct",
-                        char: c[j - 1]
-                    });
-                    i--;
-                    j--;
+                    result.push({ type: "correct", char: c[j - 1] });
+                    i--; j--;
                 } else if (dp[i - 1][j] > dp[i][j - 1]) {
-                    result.push({
-                        type: "wrong",
-                        char: u[i - 1]
-                    });
+                    result.push({ type: "wrong", char: u[i - 1] });
                     i--;
                 } else {
-                    result.push({
-                        type: "missing",
-                        char: "_"
-                    });
+                    result.push({ type: "missing", char: "_" });
                     j--;
                 }
             }
 
             while (i > 0) {
-                result.push({
-                    type: "wrong",
-                    char: u[i - 1]
-                });
+                result.push({ type: "wrong", char: u[i - 1] });
                 i--;
             }
 
             while (j > 0) {
-                result.push({
-                    type: "missing",
-                    char: "_"
-                });
+                result.push({ type: "missing", char: "_" });
                 j--;
             }
 
             result.reverse();
 
-            // 🔥 Render HTML
-            return result.map(x => {
-                return `<span class="${x.type}">${x.char}</span>`;
-            }).join("");
+            return result.map(x =>
+                `<span class="${x.type}">${x.char}</span>`
+            ).join("");
+        }
+
+        function splitUserByCorrect(user, correct) {
+
+            const u = normalize(user);
+            const words = correct.trim().split(/\s+/);
+
+            let result = [];
+            let pointer = 0;
+
+            words.forEach(w => {
+
+                let chunk = "";
+                let i = 0;
+
+                while (pointer < u.length && i < w.length) {
+                    chunk += u[pointer];
+                    pointer++;
+                    i++;
+                }
+
+                result.push(chunk);
+            });
+
+            // 🔥 phần dư (không cắt nữa)
+            if (pointer < u.length) {
+                result[result.length - 1] += u.slice(pointer);
+            }
+
+            return result;
         }
 
         function countErrors(user, correct) {
+            if (isNoSpaceMatch(user, correct)) return 0;
+
+            const uw = splitUserByCorrect(user, correct);
+            const cw = correct.trim().split(/\s+/);
+
+            let total = 0;
+
+            cw.forEach((w, i) => {
+                total += countErrorsChar(uw[i] || "", w);
+            });
+
+            return total;
+        }
+
+        function countErrorsChar(user, correct) {
+
             const u = normalize(user);
             const c = normalize(correct);
 
@@ -265,6 +322,17 @@
                 input.focus();
                 input.select();
             }
+        }
+
+        function isNoSpaceMatch(user, correct) {
+            return normalize(user) === normalize(correct);
+        }
+
+        function normalizeKeepSpace(s) {
+            return (s || "")
+                .toLowerCase()
+                .replace(/\s+/g, " ")   // giữ 1 space
+                .trim();
         }
 
         function similarity(a, b) {
