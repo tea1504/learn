@@ -156,18 +156,42 @@
                 return `<span class="${x.type}">${x.char}</span>`;
             }).join("");
         }
+
+        function countErrors(user, correct) {
+            const u = normalize(user);
+            const c = normalize(correct);
+
+            const m = u.length;
+            const n = c.length;
+
+            const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+
+            for (let i = 1; i <= m; i++) {
+                for (let j = 1; j <= n; j++) {
+                    if (u[i - 1] === c[j - 1]) {
+                        dp[i][j] = dp[i - 1][j - 1] + 1;
+                    } else {
+                        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+                    }
+                }
+            }
+
+            const lcs = dp[m][n];
+
+            return (m - lcs) + (n - lcs);
+        }
         /* =========================
            💾 SAVE STATS
            - giới hạn 50 lần để tránh phình bộ nhớ
         ========================= */
-        function saveStats(fail) {
+        function saveStats(value) {
             let stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
 
             if (!stats[cardKey]) {
                 stats[cardKey] = { attempts: [] };
             }
 
-            stats[cardKey].attempts.push(fail);
+            stats[cardKey].attempts.push(value);
 
             if (stats[cardKey].attempts.length > 50) {
                 stats[cardKey].attempts.shift();
@@ -190,7 +214,7 @@
             if (isCorrect(userInput)) {
                 result.innerHTML = "✅ PASS";
 
-                saveStats(fail);
+                saveStats(0);
 
                 fail = 0;
                 hint.innerHTML = "";
@@ -199,6 +223,7 @@
                 fail++;
 
                 let html = "";
+                let totalError = 0;
 
                 const userParts = userInput.split(";");
 
@@ -215,8 +240,14 @@
                         }
                     });
 
-                    html += generateMask(bestMatch || "", ans) + "<br>";
+                    const user = bestMatch || "";
+
+                    totalError += countErrors(user, ans);
+
+                    html += generateMask(user, ans) + "<br>";
                 });
+
+                saveStats(totalError);
 
                 if (fail >= SHOW_ANSWER_THRESHOLD) {
                     hint.innerHTML = `
