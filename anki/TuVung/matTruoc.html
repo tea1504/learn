@@ -25,7 +25,7 @@
         /* =========================
            ⚙️ CONFIG
         ========================= */
-        const SHOW_ANSWER_THRESHOLD = 10; // sai >= 10 lần thì show đáp án
+        const SHOW_ANSWER_THRESHOLD = 5; // sai >= 5 lần thì show đáp án
 
         /* =========================
            🛡️ SAFE DATA (tránh vỡ JS)
@@ -38,6 +38,8 @@
         const cardKey = encodeURIComponent(raw);
 
         let fail = 0;
+        let hasErrorInSession = false; // 🔥 chỉ cần sai 1 lần là true
+        let sessionMaxError = 0; // 🔥 lưu lỗi lớn nhất trong 1 lần trả lời
 
         /* =========================
            🔤 NORMALIZE
@@ -271,13 +273,22 @@
             if (isCorrect(userInput)) {
                 result.innerHTML = "✅ PASS";
 
-                saveStats(0);
+                if (hasErrorInSession) {
+                    saveStats(1); // hoặc sessionMaxError nếu bạn muốn chi tiết
+                } else {
+                    saveStats(0); // 🎯 đúng thật (perfect)
+                }
+
+                // reset session
+                hasErrorInSession = false;
+                sessionMaxError = 0;
 
                 fail = 0;
                 hint.innerHTML = "";
             } else {
                 result.innerHTML = "❌ NOT PASS";
                 fail++;
+                hasErrorInSession = true;
 
                 let html = "";
                 let totalError = 0;
@@ -300,9 +311,9 @@
                     const user = bestMatch || "";
 
                     totalError += countErrors(user, ans);
-
                     html += generateMask(user, ans) + "<br>";
                 });
+                sessionMaxError = Math.max(sessionMaxError, totalError);
 
                 saveStats(totalError);
 
