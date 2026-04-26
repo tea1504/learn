@@ -89,33 +89,29 @@
            🧩 GỢI Ý TỪNG CHỮ
         ========================= */
         function generateMask(user, correct) {
-            if (isNoSpaceMatch(user, correct)) {
-                return `<span class="correct">${correct}</span>`;
-            }
 
-            const userWords = splitUserByCorrect(user, correct);
-            const correctWords = correct.trim().split(/\s+/);
+            const u = normalize(user); // vd: "ha"
+            const chars = new Set(u.split("")); // {h, a}
 
             let result = "";
 
-            correctWords.forEach((cw, i) => {
-                const uw = userWords[i] || "";
-                result += generateMaskChar(uw, cw) + " ";
-            });
+            for (let ch of correct) {
 
-            // 🔥 FIX: xử lý phần dư của user
-            const normalizedUser = normalize(user);
-            const totalLen = correctWords.reduce((a, w) => a + w.length, 0);
+                // giữ khoảng trắng
+                if (ch === " ") {
+                    result += " ";
+                    continue;
+                }
 
-            if (normalizedUser.length > totalLen) {
-                const extra = normalizedUser.slice(totalLen);
-
-                result += extra.split("").map(c =>
-                    `<span class="wrong">${c}</span>`
-                ).join("");
+                // nếu ký tự nằm trong user input → hiện
+                if (chars.has(normalize(ch))) {
+                    result += `<span class="correct">${ch}</span>`;
+                } else {
+                    result += `<span class="missing">_</span>`;
+                }
             }
 
-            return result.trim();
+            return result;
         }
 
         function generateMaskChar(user, correct) {
@@ -268,16 +264,18 @@
         ========================= */
         function handle() {
 
+            // 🔥 FIX: nếu bắt đầu vòng mới (đã pass trước đó)
+            if (fail === 0) {
+                hasErrorInSession = false;
+                sessionMaxError = 0;
+            }
+            
             const userInput = input.value;
 
             if (isCorrect(userInput)) {
                 result.innerHTML = "✅ PASS";
 
-                if (hasErrorInSession) {
-                    saveStats(1); // hoặc sessionMaxError nếu bạn muốn chi tiết
-                } else {
-                    saveStats(0); // 🎯 đúng thật (perfect)
-                }
+                saveStats(fail);
 
                 // reset session
                 hasErrorInSession = false;
@@ -314,8 +312,6 @@
                     html += generateMask(user, ans) + "<br>";
                 });
                 sessionMaxError = Math.max(sessionMaxError, totalError);
-
-                saveStats(totalError);
 
                 if (fail >= SHOW_ANSWER_THRESHOLD) {
                     hint.innerHTML = `

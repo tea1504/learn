@@ -20,6 +20,7 @@
 
         const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
         const container = document.getElementById("analytics");
+        const card = document.querySelector(".card-container");
 
         if (!stats[cardKey] || !stats[cardKey].attempts) {
             container.innerHTML = "<div class='empty'>Chưa có dữ liệu</div>";
@@ -95,6 +96,10 @@
             level = "✅ Tốt";
             levelClass = "good";
         }
+
+        // 🔥 apply cho toàn bộ màn hình
+        card.classList.remove("good", "bad");
+        card.classList.add(levelClass);
 
         /* =========================
            🎯 UI
