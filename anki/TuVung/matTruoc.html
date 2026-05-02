@@ -14,7 +14,7 @@
 
         <div id="result"></div>
         <div id="hint"></div>
-        
+
         <button id="submitBtn">Submit</button>
         <button id="showBtn">Gợi ý</button>
     </div>
@@ -329,7 +329,12 @@
             `;
             isShowingAnswer = true;
             // tăng số lần sai lên để lần sau sẽ show luôn đáp án
-            fail = SHOW_ANSWER_THRESHOLD;
+            fail += SHOW_ANSWER_THRESHOLD;
+
+            // reset input
+            input.value = "";
+            input.focus();
+            input.select();
         };
         input.addEventListener("keydown", e => { if (e.key === "Enter") handle(); });
         input.addEventListener("focus", () => input.select());
