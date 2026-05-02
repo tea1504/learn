@@ -12,6 +12,7 @@
     <div class="custom-input">
         <input id="myInput" placeholder="Nhập..." />
         <button id="submitBtn">Submit</button>
+        <button id="showBtn">Gợi ý</button>
 
         <div id="result"></div>
         <div id="hint"></div>
@@ -22,11 +23,8 @@
 <script>
     (function () {
 
-        /* =========================
-           ⚙️ CONFIG
-        ========================= */
-        const SHOW_ANSWER_THRESHOLD = 5; // sai >= 5 lần thì show đáp án
-
+        // số lần sai để hiển thị đáp án
+        const SHOW_ANSWER_THRESHOLD = 10;
         /* =========================
            🛡️ SAFE DATA (tránh vỡ JS)
            - remove xuống dòng
@@ -40,6 +38,8 @@
         let fail = 0;
         // đánh dấu lần nhập đầu tiên
         let isFirst = true;
+        // đánh dấu đã show đáp án để lần sau sẽ show luôn
+        let isShowingAnswer = false;
 
         /* =========================
            🔤 NORMALIZE
@@ -291,7 +291,14 @@
                 input.select();
 
                 // lưu lỗi vào messageError để cải thiện gợi ý sau này
-                saveStats(fail, `Tôi nhập là ${userInput}`);
+                saveStats(fail, `Tôi nhập là ${userInput} gợi ý là ${html.replace(/<span class="correct">/g, "").replace(/<\/span>/g, "").replace(/<span class="missing">/g, "")}`);
+            }
+            
+            if (isShowingAnswer) {
+                // lưu lỗi vào messageError để cải thiện gợi ý sau này
+                saveStats(fail, `Tôi đã quên từ này hãy giúp tôi nhớ`);
+                // reset lại trạng thái đã show đáp án để lần sau sẽ không show nữa
+                isShowingAnswer = false;
             }
         }
 
@@ -311,6 +318,18 @@
         }
 
         document.getElementById("submitBtn").onclick = handle;
+        // gợi ý sẽ hiển thị đáp án và tăng số lần sai lên để lần sau sẽ show luôn đáp án
+        document.getElementById("showBtn").onclick = () => {
+            // hiển thị đáp án
+            hint.innerHTML = `
+                <div class="answer-hint">
+                    💡 ${answers.join("; ")}
+                </div>
+            `;
+            isShowingAnswer = true;
+            // tăng số lần sai lên để lần sau sẽ show luôn đáp án
+            fail = SHOW_ANSWER_THRESHOLD;
+        };
         input.addEventListener("keydown", e => { if (e.key === "Enter") handle(); });
         input.addEventListener("focus", () => input.select());
         setTimeout(() => { input.focus(); input.select(); }, 100);
