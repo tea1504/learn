@@ -295,7 +295,7 @@
                 input.select();
 
                 // lưu lỗi vào messageError để cải thiện gợi ý sau này
-                saveStats(fail, `Tôi nhập là ${userInput} gợi ý là ${html.replace(/<span class="correct">/g, "").replace(/<\/span>/g, "").replace(/<span class="missing">/g, "")}`);
+                saveStats(fail, `Đáp án là ${answers.join("; ")}, nhưng tôi nhập là ${userInput}. Sau khi tôi nhập thì gợi ý là ${html.replace(/<span class="correct">/g, "").replace(/<\/span>/g, "").replace(/<span class="missing">/g, "")}`);
             }
             
             if (isShowingAnswer) {
