@@ -180,7 +180,7 @@
                 }
 
                 // khởi tạo text để copy
-                let text = `Sau khi học từ này, tôi đã mắc lỗi ${messageErrors.length} lần:\n\n`;
+                let text = `Sau khi học từ {{Mặt trước}}({{Mặt sau}}), tôi đã mắc lỗi ${messageErrors.length} lần:\n\n`;
 
                 // cộng dồn tất cả lỗi vào text
                 messageErrors.forEach((err, i) => {
@@ -188,7 +188,10 @@
                 });
 
                 // đặt câu hỏi
-                text += `Hãy cho tôi biết tôi mắc lỗi gì trong quá trình học từ này và cách cải thiện.`;
+                text += `Hãy cho tôi biết tôi mắc lỗi gì trong quá trình học từ này và cách cải thiện.\n`;
+                text += `(Lưu ý:\n1. Thứ tự đáp án tôi nhập có thể không theo thứ tự gợi ý,\n`;
+                text += `2. khi nhập 1 chuỗi liên tiếp như aiueo, sasisuseso là tôi đang tìm gợi ý từ hệ thống (đây xem như là lỗi quên bài)\n`;
+                text += `3. Các lỗi liên quan tới đánh máy là có thể xảy ra lỗi này không cần phân tích, nhưng cũng có thể là do sai thật chứ không phải đánh máy.)`;
 
                 try {
                     // copy vào clipboard
@@ -296,6 +299,9 @@
         requestAnimationFrame(() => {
             requestAnimationFrame(drawChart);
         });
+
+        stats[cardKey].messageError = [];
+        localStorage.setItem("cardStats", JSON.stringify(stats));
 
     })();
 </script>
