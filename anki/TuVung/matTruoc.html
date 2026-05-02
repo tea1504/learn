@@ -38,8 +38,6 @@
         const cardKey = encodeURIComponent(raw);
 
         let fail = 0;
-        let hasErrorInSession = false; // 🔥 chỉ cần sai 1 lần là true
-        let sessionMaxError = 0; // 🔥 lưu lỗi lớn nhất trong 1 lần trả lời
 
         /* =========================
            🔤 NORMALIZE
@@ -112,58 +110,6 @@
             }
 
             return result;
-        }
-
-        function generateMaskChar(user, correct) {
-            const u = normalize(user);
-            const c = normalize(correct);
-
-            const m = u.length;
-            const n = c.length;
-
-            const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-
-            for (let i = 1; i <= m; i++) {
-                for (let j = 1; j <= n; j++) {
-                    if (u[i - 1] === c[j - 1]) {
-                        dp[i][j] = dp[i - 1][j - 1] + 1;
-                    } else {
-                        dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-                    }
-                }
-            }
-
-            let i = m, j = n;
-            let result = [];
-
-            while (i > 0 && j > 0) {
-                if (u[i - 1] === c[j - 1]) {
-                    result.push({ type: "correct", char: c[j - 1] });
-                    i--; j--;
-                } else if (dp[i - 1][j] > dp[i][j - 1]) {
-                    result.push({ type: "wrong", char: u[i - 1] });
-                    i--;
-                } else {
-                    result.push({ type: "missing", char: "_" });
-                    j--;
-                }
-            }
-
-            while (i > 0) {
-                result.push({ type: "wrong", char: u[i - 1] });
-                i--;
-            }
-
-            while (j > 0) {
-                result.push({ type: "missing", char: "_" });
-                j--;
-            }
-
-            result.reverse();
-
-            return result.map(x =>
-                `<span class="${x.type}">${x.char}</span>`
-            ).join("");
         }
 
         function splitUserByCorrect(user, correct) {
@@ -263,13 +209,6 @@
            🎯 HANDLE SUBMIT
         ========================= */
         function handle() {
-
-            // 🔥 FIX: nếu bắt đầu vòng mới (đã pass trước đó)
-            if (fail === 0) {
-                hasErrorInSession = false;
-                sessionMaxError = 0;
-            }
-            
             const userInput = input.value;
 
             if (isCorrect(userInput)) {
@@ -277,16 +216,11 @@
 
                 saveStats(fail);
 
-                // reset session
-                hasErrorInSession = false;
-                sessionMaxError = 0;
-
                 fail = 0;
                 hint.innerHTML = "";
             } else {
                 result.innerHTML = "❌ NOT PASS";
                 fail++;
-                hasErrorInSession = true;
 
                 let html = "";
                 let totalError = 0;
@@ -311,7 +245,6 @@
                     totalError += countErrors(user, ans);
                     html += generateMask(user, ans) + "<br>";
                 });
-                sessionMaxError = Math.max(sessionMaxError, totalError);
 
                 if (fail >= SHOW_ANSWER_THRESHOLD) {
                     hint.innerHTML = `
@@ -333,13 +266,6 @@
 
         function isNoSpaceMatch(user, correct) {
             return normalize(user) === normalize(correct);
-        }
-
-        function normalizeKeepSpace(s) {
-            return (s || "")
-                .toLowerCase()
-                .replace(/\s+/g, " ")   // giữ 1 space
-                .trim();
         }
 
         function similarity(a, b) {
