@@ -126,8 +126,37 @@
             <div>${stability}</div>
 
         </div>
+        <div style="margin-top:10px;">
+            <button id="copyBtn">📋 Copy</button>
+        </div>
     `;
+    
+        // 🔥 COPY CONTENT
+        setTimeout(() => {
+            const btn = document.getElementById("copyBtn");
+            if (!btn) return;
 
+            btn.onclick = async () => {
+                const front = document.querySelectorAll(".answer")[0]?.innerText || "";
+                const back = document.querySelectorAll(".answer")[1]?.innerText || "";
+
+                const text = `Bạn là chuyên gia ngôn ngữ Nhật Bản và giảng viên từ vựng nâng cao. Dữ liệu đầu vào:\n${front}\n${back}\nHãy phân tích cực kỳ chi tiết từ/cụm từ tiếng Nhật xuất hiện trong dữ liệu trên.\nYêu cầu trình bày rõ ràng, có cấu trúc:\n1. Thông tin cơ bản:\n- Từ gốc (kanji/kana)\n- Furigana đầy đủ\n- Nghĩa tiếng Việt + tiếng Anh\n- Loại từ\n2. Phân tích Kanji (nếu có):\n- Từng chữ Hán cấu thành\n- Âm On/Kun\n- Ý nghĩa từng chữ\n- Phân loại theo Lục thư (象形, 指事, 会意, 形声...)\n- Gợi ý cách ghi nhớ (mnemonic)\n3. Cách dùng:\n- Trong giao tiếp hằng ngày (kèm ví dụ hội thoại)\n- Trong văn viết trang trọng\n- Trong lĩnh vực CNTT (nếu có)\n- Sắc thái (formal/informal, nuance)\n4. Ví dụ:\n- Ít nhất 5 câu ví dụ (có furigana(cuối câu) + dịch, dựa trên chủ đề {{Deck}})\n- 1 đoạn hội thoại ngắn\n5. Mở rộng:\n- Từ đồng nghĩa (kèm so sánh nuance)\n- Từ trái nghĩa\n- Collocations phổ biến\n- Thành ngữ / biểu hiện liên quan (nếu có)\n6. Ngữ pháp liên quan:\n- Các mẫu ngữ pháp thường đi kèm\n7. Lỗi thường gặp:\n- Những lỗi người học hay mắc\n8. Tài nguyên tham khảo:\n- Cung cấp link từ nguồn đáng tin cậy (từ điển, website học tiếng Nhật)\n9. Insight nâng cao:\n- Phân tích dành cho người học trình độ trung - cao cấp\nYêu cầu bổ sung:\n- Trình bày bằng tiếng Việt\n- Format rõ ràng (heading + bullet points)\n- Không bỏ sót mục nào\n- Nếu dữ liệu ${front} và ${back} mâu thuẫn → phân tích và giải thích\n- Nếu thiếu thông tin → ghi rõ "Không áp dụng"`;
+
+                try {
+                    await navigator.clipboard.writeText(text);
+                    btn.innerText = "✅ Đã copy";
+                } catch (e) {
+                    // fallback cho Anki (quan trọng)
+                    navigator.clipboard.writeText(text)
+
+                    btn.innerText = "✅ Đã copy";
+                }
+
+                setTimeout(() => {
+                    btn.innerText = "📋 Copy";
+                }, 1500);
+            };
+        }, 0);
         /* =========================
            🎨 DRAW CHART (fix blur + width)
         ========================= */
