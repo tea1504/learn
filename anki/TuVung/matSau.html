@@ -28,7 +28,9 @@
         }
 
         const attempts = stats[cardKey].attempts;
-        const recent = attempts.slice(-5);
+        // nếu chưa có attempt nào → chưa có dữ liệu
+        const messageErrors = stats[cardKey].messageError || [];
+        const recent = attempts;
 
         /* =========================
            📊 STATS
@@ -128,9 +130,10 @@
         </div>
         <div style="margin-top:10px;">
             <button id="copyBtn">📋 Copy</button>
+            <button id="copyErr">❌ Lỗi</button>
         </div>
     `;
-    
+
         // 🔥 COPY CONTENT
         setTimeout(() => {
             const btn = document.getElementById("copyBtn");
@@ -154,6 +157,54 @@
 
                 setTimeout(() => {
                     btn.innerText = "📋 Copy";
+                }, 1500);
+            };
+        }, 0);
+
+        // 🔥 COPY LỖI (dành cho người học cải thiện)
+        setTimeout(() => {
+            // hàm lưu stats (cải thiện dần theo thời gian, quan trọng để cải thiện gợi ý)
+            const btn = document.getElementById("copyErr");
+            // nếu không có button → không cần thiết phải crash, chỉ cần dừng ở đây là được
+            if (!btn) return;
+
+            // khi click sẽ copy lỗi gần nhất + tất cả lỗi vào clipboard để người học dễ dàng gửi cho thầy cô hoặc tự phân tích cải thiện
+            btn.onclick = async () => {
+                if (messageErrors.length === 0) {
+                    // nếu chưa có lỗi nào → không cần copy, chỉ cần thông báo
+                    btn.innerText = "✅ Chưa có lỗi";
+                    setTimeout(() => {
+                        btn.innerText = "❌ Lỗi";
+                    }, 1500);
+                    return;
+                }
+
+                // khởi tạo text để copy
+                let text = `Sau khi học từ này, tôi đã mắc lỗi ${messageErrors.length} lần:\n\n`;
+
+                // cộng dồn tất cả lỗi vào text
+                messageErrors.forEach((err, i) => {
+                    text += `Lỗi ${i + 1}: ${err}\n`;
+                });
+
+                // đặt câu hỏi
+                text += `Hãy cho tôi biết tôi mắc lỗi gì trong quá trình học từ này và cách cải thiện.`;
+
+                try {
+                    // copy vào clipboard
+                    await navigator.clipboard.writeText(text);
+                    // thông báo đã copy
+                    btn.innerText = "✅ Đã copy";
+                } catch (e) {
+                    // fallback cho Anki (quan trọng)
+                    navigator.clipboard.writeText(text)
+                    // thông báo đã copy
+                    btn.innerText = "✅ Đã copy";
+                }
+
+                setTimeout(() => {
+                    // reset text button sau 1.5s
+                    btn.innerText = "❌ Lỗi";
                 }, 1500);
             };
         }, 0);

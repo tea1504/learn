@@ -38,6 +38,8 @@
         const cardKey = encodeURIComponent(raw);
 
         let fail = 0;
+        // đánh dấu lần nhập đầu tiên
+        let isFirst = true;
 
         /* =========================
            🔤 NORMALIZE
@@ -181,21 +183,28 @@
 
             return (m - lcs) + (n - lcs);
         }
+
         /* =========================
            💾 SAVE STATS
-           - giới hạn 50 lần để tránh phình bộ nhớ
         ========================= */
-        function saveStats(value) {
+        function saveStats(value, err = "") {
+            // lấy dữ liệu cũ
             let stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
 
+            // nếu chưa có dữ liệu cho card này thì khởi tạo
             if (!stats[cardKey]) {
-                stats[cardKey] = { attempts: [] };
+                // attempts: mảng lưu số lần sai của mỗi lần học
+                // messageError: mảng lưu lỗi sai
+                stats[cardKey] = { attempts: [], messageError: [] };
             }
 
-            stats[cardKey].attempts.push(value);
-
-            if (stats[cardKey].attempts.length > 50) {
-                stats[cardKey].attempts.shift();
+            // lưu dữ liệu mới
+            // nếu có lỗi thì lưu vào messageError, ngược lại lưu số lần sai vào attempts
+            if (err) {
+                stats[cardKey].messageError.push(err);
+            }
+            else {
+                stats[cardKey].attempts.push(value);
             }
 
             localStorage.setItem("cardStats", JSON.stringify(stats));
@@ -211,15 +220,32 @@
         function handle() {
             const userInput = input.value;
 
+            // nếu input rỗng → cảnh báo và không xử lý tiếp
+            if (!userInput.trim()) {
+                hint.innerHTML = "⚠️ Vui lòng nhập đáp án";
+                input.focus();
+                return;
+            }
+
             if (isCorrect(userInput)) {
                 result.innerHTML = "✅ PASS";
+                
+                // chỉ lưu nếu sai hoặc lần đầu (để có dữ liệu cải thiện)
+                if (fail > 0 || isFirst) {
+                    saveStats(fail, "");
+                }
 
-                saveStats(fail);
-
+                // reset
                 fail = 0;
+                // sau lần nhập đầu tiên, các lần sau sẽ không còn là "lần đầu" nữa
+                isFirst = false;
+                // ẩn gợi ý
                 hint.innerHTML = "";
             } else {
+                // đánh dấu không phải lần đầu nếu đã nhập sai ít nhất 1 lần
+                isFirst = false;
                 result.innerHTML = "❌ NOT PASS";
+                // tăng số lần sai
                 fail++;
 
                 let html = "";
@@ -259,8 +285,13 @@
                     hint.innerHTML = html;
                 }
 
+                // reset input
+                input.value = "";
                 input.focus();
                 input.select();
+
+                // lưu lỗi vào messageError để cải thiện gợi ý sau này
+                saveStats(fail, `Đáp án là: ${answers.join("; ")} nhưng tôi nhập là ${userInput}`);
             }
         }
 
