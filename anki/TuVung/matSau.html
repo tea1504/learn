@@ -106,6 +106,36 @@
         /* =========================
            🎯 UI
         ========================= */
+        // Build error table HTML
+        let errorTableHTML = '';
+        // nếu có lỗi → hiển thị bảng lỗi chi tiết để người học dễ dàng nhận biết và cải thiện
+        if (messageErrors.length > 0) {
+            // tạo từng row lỗi
+            const errorRows = messageErrors.map((err, i) => `
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${i + 1}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${err}</td>
+                </tr>
+            `).join('');
+            // tạo bảng lỗi hoàn chỉnh
+            errorTableHTML = `
+                <div style="margin-top: 15px;">
+                    <div style="font-weight: bold; margin-bottom: 8px;">📋 Danh sách lỗi (${messageErrors.length}):</div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr>
+                                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f0f0f0; text-align: center; width: 30px;">STT</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f0f0f0;">Chi tiết lỗi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${errorRows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
         container.innerHTML = `
         <div>
 
@@ -132,6 +162,8 @@
             <button id="copyBtn">📋 Copy</button>
             <button id="copyErr">❌ Lỗi</button>
         </div>
+        <br />
+        ${errorTableHTML}
     `;
 
         // 🔥 COPY CONTENT

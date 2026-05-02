@@ -242,6 +242,9 @@
                 isFirst = false;
                 // ẩn gợi ý
                 hint.innerHTML = "";
+
+                // focus vào nút submit để lần sau nhấn Enter sẽ dễ dàng submit tiếp
+                document.getElementById("submitBtn").focus();
             } else {
                 // đánh dấu không phải lần đầu nếu đã nhập sai ít nhất 1 lần
                 isFirst = false;
