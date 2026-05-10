@@ -1,0 +1,340 @@
+<div class="card-container">
+    <div class="answer">{{Mặt trước}}</div>
+
+    <div class="answer">{{Mặt sau}}</div>
+
+    <div id="analytics"></div>
+
+</div>
+
+<script>
+    (function () {
+
+        /* =========================
+           🛡️ SAFE DATA
+        ========================= */
+        const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
+        if (!raw) return;
+
+        const cardKey = encodeURIComponent(raw);
+
+        const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+        const container = document.getElementById("analytics");
+        const card = document.querySelector(".card-container");
+
+        if (!stats[cardKey] || !stats[cardKey].attempts) {
+            container.innerHTML = "<div class='empty'>Chưa có dữ liệu</div>";
+            return;
+        }
+
+        const attempts = stats[cardKey].attempts;
+        // nếu chưa có attempt nào → chưa có dữ liệu
+        const messageErrors = stats[cardKey].messageError || [];
+        const recent = attempts;
+
+        /* =========================
+           📊 STATS
+        ========================= */
+        const avg = attempts.reduce((a, b) => a + b, 0) / attempts.length;
+        const last = attempts[attempts.length - 1];
+        const prev = attempts[attempts.length - 2];
+
+        /* =========================
+           📉 TREND (so với lần trước)
+        ========================= */
+        let trendText = "➡️ Ổn định";
+        if (prev !== undefined) {
+            if (last < prev) trendText = "📉 Đang cải thiện";
+            else if (last > prev) trendText = "📈 Đang tệ hơn";
+        }
+
+        /* =========================
+           🔥 DIFFICULTY
+        ========================= */
+        const maxFail = 3;
+        const difficulty = Math.min(100, (avg / maxFail) * 100);
+
+        function renderBar(percent) {
+            const total = 10;
+            const filled = Math.round((percent / 100) * total);
+            return "█".repeat(filled) + "░".repeat(total - filled);
+        }
+
+        const diffBar = renderBar(difficulty);
+
+        /* =========================
+           🧠 VARIANCE (sample)
+        ========================= */
+        const mean = avg;
+        const variance = attempts.length > 1
+            ? attempts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (attempts.length - 1)
+            : 0;
+
+        let stability = variance > 2 ? "⚠️ Không ổn định" : "🧠 Ổn định";
+
+        /* =========================
+           🔥 STREAK
+        ========================= */
+        let streak = 0;
+        for (let i = attempts.length - 1; i >= 0; i--) {
+            if (attempts[i] === 0) streak++;
+            else break;
+        }
+
+        /* =========================
+           🏷️ LEVEL (2 trạng thái)
+           - có sai → học lại
+           - không sai → tốt
+        ========================= */
+        let level = "";
+        let levelClass = "";
+
+        const hasFail = last > 0;
+
+        if (hasFail) {
+            level = "❌ Học lại";
+            levelClass = "bad";
+        } else {
+            level = "✅ Tốt";
+            levelClass = "good";
+        }
+
+        // 🔥 apply cho toàn bộ màn hình
+        card.classList.remove("good", "bad");
+        card.classList.add(levelClass);
+
+        /* =========================
+           🎯 UI
+        ========================= */
+        // Build error table HTML
+        let errorTableHTML = '';
+        // nếu có lỗi → hiển thị bảng lỗi chi tiết để người học dễ dàng nhận biết và cải thiện
+        if (messageErrors.length > 0) {
+            // tạo từng row lỗi
+            const errorRows = messageErrors.map((err, i) => `
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${i + 1}</td>
+                    <td style="border: 1px solid #ddd; padding: 8px;">${err}</td>
+                </tr>
+            `).join('');
+            // tạo bảng lỗi hoàn chỉnh
+            errorTableHTML = `
+                <div style="margin-top: 15px;">
+                    <div style="font-weight: bold; margin-bottom: 8px;">📋 Danh sách lỗi (${messageErrors.length}):</div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr>
+                                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f0f0f0; text-align: center; width: 30px;">STT</th>
+                                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f0f0f0;">Chi tiết lỗi</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${errorRows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+        }
+
+        container.innerHTML = `
+        <div>
+
+            <div class="${levelClass}">
+                ${level}
+            </div>
+
+            <div>🔥 Streak: ${streak}</div>
+
+            <div>📊 Tiến bộ:</div>
+            <canvas id="chartCanvas" height="80"></canvas>
+
+            <div>${trendText}</div>
+
+            <div>
+                🔥 Độ khó:
+                <div>${diffBar} ${difficulty.toFixed(0)}%</div>
+            </div>
+
+            <div>${stability}</div>
+
+        </div>
+        <div style="margin-top:10px;">
+            <button id="copyBtn">📋 Copy</button>
+            <button id="copyErr">❌ Lỗi</button>
+        </div>
+        <br />
+        ${errorTableHTML}
+    `;
+
+        // 🔥 COPY CONTENT
+        setTimeout(() => {
+            const btn = document.getElementById("copyBtn");
+            if (!btn) return;
+
+            btn.onclick = async () => {
+                const front = document.querySelectorAll(".answer")[0]?.innerText || "";
+                const back = document.querySelectorAll(".answer")[1]?.innerText || "";
+
+                const text = `Bạn là chuyên gia ngôn ngữ Nhật Bản và giảng viên từ vựng nâng cao. Dữ liệu đầu vào:\n${front}\n${back}\nHãy phân tích cực kỳ chi tiết từ/cụm từ tiếng Nhật xuất hiện trong dữ liệu trên.\nYêu cầu trình bày rõ ràng, có cấu trúc:\n1. Thông tin cơ bản:\n- Từ gốc (kanji/kana)\n- Furigana đầy đủ\n- Nghĩa tiếng Việt + tiếng Anh\n- Loại từ\n2. Phân tích Kanji (nếu có):\n- Từng chữ Hán cấu thành\n- Âm On/Kun\n- Ý nghĩa từng chữ\n- Phân loại theo Lục thư (象形, 指事, 会意, 形声...)\n- Gợi ý cách ghi nhớ (mnemonic)\n3. Cách dùng:\n- Trong giao tiếp hằng ngày (kèm ví dụ hội thoại)\n- Trong văn viết trang trọng\n- Trong lĩnh vực CNTT (nếu có)\n- Sắc thái (formal/informal, nuance)\n4. Ví dụ:\n- Ít nhất 5 câu ví dụ (có furigana(cuối câu) + dịch, dựa trên chủ đề {{Deck}}, nếu có mô tả bối cảnh thì càng tốt)\n- 1 đoạn hội thoại ngắn\n5. Mở rộng:\n- Từ đồng nghĩa (kèm so sánh nuance)\n- Từ trái nghĩa\n- Collocations phổ biến\n- Thành ngữ / biểu hiện liên quan (nếu có)\n6. Ngữ pháp liên quan:\n- Các mẫu ngữ pháp thường đi kèm\n7. Lỗi thường gặp:\n- Những lỗi người học hay mắc\n8. Tài nguyên tham khảo:\n- Cung cấp link từ nguồn đáng tin cậy (từ điển, website học tiếng Nhật)\n9. Insight nâng cao:\n- Phân tích dành cho người học trình độ trung - cao cấp\nYêu cầu bổ sung:\n- Trình bày bằng tiếng Việt\n- Format rõ ràng (heading + bullet points)\n- Không bỏ sót mục nào\n- Nếu dữ liệu ${front} và ${back} mâu thuẫn → phân tích và giải thích\n- Nếu thiếu thông tin → ghi rõ "Không áp dụng"`;
+
+                try {
+                    await navigator.clipboard.writeText(text);
+                    btn.innerText = "✅ Đã copy";
+                } catch (e) {
+                    // fallback cho Anki (quan trọng)
+                    navigator.clipboard.writeText(text)
+
+                    btn.innerText = "✅ Đã copy";
+                }
+
+                setTimeout(() => {
+                    btn.innerText = "📋 Copy";
+                }, 1500);
+            };
+        }, 0);
+
+        // 🔥 COPY LỖI (dành cho người học cải thiện)
+        setTimeout(() => {
+            // hàm lưu stats (cải thiện dần theo thời gian, quan trọng để cải thiện gợi ý)
+            const btn = document.getElementById("copyErr");
+            // nếu không có button → không cần thiết phải crash, chỉ cần dừng ở đây là được
+            if (!btn) return;
+
+            // khi click sẽ copy lỗi gần nhất + tất cả lỗi vào clipboard để người học dễ dàng gửi cho thầy cô hoặc tự phân tích cải thiện
+            btn.onclick = async () => {
+                if (messageErrors.length === 0) {
+                    // nếu chưa có lỗi nào → không cần copy, chỉ cần thông báo
+                    btn.innerText = "✅ Chưa có lỗi";
+                    setTimeout(() => {
+                        btn.innerText = "❌ Lỗi";
+                    }, 1500);
+                    return;
+                }
+
+                // khởi tạo text để copy
+                let text = `Sau khi học từ {{Mặt trước}}({{Mặt sau}}), tôi đã mắc lỗi ${messageErrors.length} lần:\n\n`;
+
+                // cộng dồn tất cả lỗi vào text
+                messageErrors.forEach((err, i) => {
+                    text += `Lỗi ${i + 1}: ${err}\n`;
+                });
+
+                // đặt câu hỏi
+                text += `Hãy cho tôi biết tôi mắc lỗi gì trong quá trình học từ này và cách cải thiện.\n`;
+                text += `(Lưu ý:\n1. Thứ tự đáp án tôi nhập có thể không theo thứ tự gợi ý.\n`;
+                text += `2. khi nhập 1 chuỗi liên tiếp như aiueo, sasisuseso là tôi đang tìm gợi ý từ hệ thống (đây xem như là lỗi quên bài).\n`;
+                text += `3. Các lỗi liên quan tới đánh máy là có thể xảy ra lỗi này không cần phân tích, nhưng cũng có thể là do sai thật chứ không phải đánh máy.\n`;
+                text += `4. Đánh giá ngắn gọn trong 1-2 đoạn thôi nhé)`;
+
+                try {
+                    // copy vào clipboard
+                    await navigator.clipboard.writeText(text);
+                    // thông báo đã copy
+                    btn.innerText = "✅ Đã copy";
+                } catch (e) {
+                    // fallback cho Anki (quan trọng)
+                    navigator.clipboard.writeText(text)
+                    // thông báo đã copy
+                    btn.innerText = "✅ Đã copy";
+                }
+
+                setTimeout(() => {
+                    // reset text button sau 1.5s
+                    btn.innerText = "❌ Lỗi";
+                }, 1500);
+            };
+        }, 0);
+        /* =========================
+           🎨 DRAW CHART (fix blur + width)
+        ========================= */
+        function drawChart() {
+            const canvas = document.getElementById("chartCanvas");
+            if (!canvas) return;
+
+            const ctx = canvas.getContext("2d");
+
+            // 🔥 FIX 1: fallback width (quan trọng nhất)
+            let width = canvas.parentElement.offsetWidth;
+
+            if (!width || width === 0) {
+                width = 300; // fallback tránh crash
+            }
+
+            const height = 80;
+
+            // 🔥 FIX 2: retina scale chuẩn
+            const ratio = window.devicePixelRatio || 1;
+
+            canvas.width = width * ratio;
+            canvas.height = height * ratio;
+            canvas.style.width = width + "px";
+            canvas.style.height = height + "px";
+
+            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+            ctx.clearRect(0, 0, width, height);
+
+            // 🔥 FIX 3: nếu chỉ có 1 điểm → vẫn vẽ
+            if (recent.length === 1) {
+                const x = width / 2;
+                const y = height - (recent[0] / 5) * height;
+
+                ctx.beginPath();
+                ctx.arc(x, y, 4, 0, Math.PI * 2);
+                ctx.fillStyle = "#3b82f6";
+                ctx.fill();
+
+                return;
+            }
+
+            if (recent.length < 1) return;
+
+            const max = Math.max(...recent, 5);
+            const stepX = width / (recent.length - 1);
+
+            const color = last < avg ? "#22c55e" : "#ef4444";
+
+            // LINE
+            ctx.beginPath();
+            ctx.lineWidth = 2;
+            ctx.strokeStyle = color;
+
+            recent.forEach((v, i) => {
+                const x = i * stepX;
+                const y = height - (v / max) * height;
+
+                if (i === 0) ctx.moveTo(x, y);
+                else ctx.lineTo(x, y);
+            });
+
+            ctx.stroke();
+
+            // FILL
+            ctx.lineTo(width, height);
+            ctx.lineTo(0, height);
+            ctx.closePath();
+            ctx.fillStyle = color + "22";
+            ctx.fill();
+
+            // POINTS
+            recent.forEach((v, i) => {
+                const x = i * stepX;
+                const y = height - (v / max) * height;
+
+                ctx.beginPath();
+                ctx.arc(x, y, 3, 0, Math.PI * 2);
+                ctx.fillStyle = color;
+                ctx.fill();
+            });
+        }
+
+        // đảm bảo DOM render xong
+        requestAnimationFrame(() => {
+            requestAnimationFrame(drawChart);
+        });
+
+        stats[cardKey].messageError = [];
+        localStorage.setItem("cardStats", JSON.stringify(stats));
+
+    })();
+</script>
