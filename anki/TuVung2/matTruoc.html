@@ -1,11 +1,11 @@
 <div class="card-container">
 
     <!-- Hiển thị đáp án (ẩn/hiện tùy logic Anki) -->
-    <div class="answer">{{Mặt sau}}</div>
+    <div class="answer">{{Mặt trước}}</div>
 
     <!-- Typing của Anki -->
     <div class="typing">
-        {{type:Mặt trước}}
+        {{type:Mặt sau}}
     </div>
 
     <!-- Input custom -->
@@ -26,8 +26,8 @@
 
         // số lần sai để hiển thị đáp án
         const SHOW_ANSWER_THRESHOLD = 10;
-        // lấy raw string từ mặt trước, thay vì {{Mặt trước}} đã được Anki xử lý
-        const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
+        // lấy raw string từ mặt trước, thay vì {{Mặt sau}} đã được Anki xử lý
+        const raw = `{{Mặt sau}}`.replace(/\n/g, " ");
         // nếu raw rỗng thì không cần xử lý gì cả
         if (!raw) return;
         // mã hóa raw để dùng làm key lưu stats

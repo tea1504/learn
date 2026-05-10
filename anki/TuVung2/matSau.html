@@ -1,7 +1,7 @@
 <div class="card-container">
-    <div class="answer">{{Mặt trước}}</div>
-
     <div class="answer">{{Mặt sau}}</div>
+
+    <div class="answer">{{Mặt trước}}</div>
 
     <div id="analytics"></div>
 
@@ -13,7 +13,7 @@
         /* =========================
            🛡️ SAFE DATA
         ========================= */
-        const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
+        const raw = `{{Mặt sau}}`.replace(/\n/g, " ");
         if (!raw) return;
 
         const cardKey = encodeURIComponent(raw);
@@ -212,7 +212,7 @@
                 }
 
                 // khởi tạo text để copy
-                let text = `Sau khi học từ {{Mặt trước}}({{Mặt sau}}), tôi đã mắc lỗi ${messageErrors.length} lần:\n\n`;
+                let text = `Sau khi học từ {{Mặt sau}}({{Mặt trước}}), tôi đã mắc lỗi ${messageErrors.length} lần:\n\n`;
 
                 // cộng dồn tất cả lỗi vào text
                 messageErrors.forEach((err, i) => {
