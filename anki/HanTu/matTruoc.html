@@ -483,6 +483,15 @@
         input.addEventListener("keydown", e => { if (e.key === "Enter") handle(); });
         // khi focus vào input thì tự động chọn toàn bộ nội dung để người dùng có thể nhập lại dễ dàng
         input.addEventListener("focus", () => input.select());
+
+        // Xử lý hiển thị chỉ phần từ trong đáp án
+        const answerDiv = document.querySelector('.answer');
+        if (answerDiv) {
+            const fullText = answerDiv.textContent;
+            const word = fullText.split(' - ')[0];
+            answerDiv.textContent = word;
+        }
+
         // focus vào input khi mở card và chọn toàn bộ nội dung để người dùng có thể nhập ngay
         setTimeout(() => { input.focus(); input.select(); }, 100);
 
