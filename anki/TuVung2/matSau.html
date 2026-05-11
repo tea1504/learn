@@ -3,3 +3,101 @@
 
     <div class="answer">{{Mặt trước}}</div>
 </div>
+
+<style>
+    /* =========================
+   🎯 GLOBAL
+========================= */
+    * {
+        box-sizing: border-box;
+        transition: all 0.15s ease;
+    }
+
+    /* =========================
+   🧱 CONTAINER
+========================= */
+    .card-container {
+        padding: 16px;
+        max-width: 500px;
+        margin: auto;
+        overflow: hidden;
+        /* chống tràn */
+        text-align: center;
+        font-family: system-ui, sans-serif;
+
+        /* glass effect */
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
+
+        min-height: 300px;
+    }
+
+    .answer {
+        padding: 16px 20px;
+
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.6;
+
+        color: white;
+        text-align: center;
+
+        /* glass effect */
+        background: rgba(255, 255, 255, 0.12);
+
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
+
+        border: 1px solid rgba(255, 255, 255, 0.2);
+
+        border-radius: 20px;
+
+        /* shadow */
+        box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.25);
+
+        /* spacing */
+        margin: 20px auto;
+
+        /* responsive */
+        width: fit-content;
+        max-width: 90%;
+
+        /* chống text dính sát */
+        word-break: break-word;
+
+        /* glow text */
+        text-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .answer {
+        animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+
+    .answer {
+        letter-spacing: 1px;
+        font-family:
+            "Noto Sans JP",
+            "Hiragino Sans",
+            sans-serif;
+    }
+
+    .card-container {
+        background: transparent !important;
+        backdrop-filter: none !important;
+    }
+</style>

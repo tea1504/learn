@@ -2,83 +2,181 @@
     <div class="answer" id="kanjiOnly"></div>
 </div>
 
-<script>
-(async function () {
+<style>
+    /* =========================
+   🎯 GLOBAL
+========================= */
+    * {
+        box-sizing: border-box;
+        transition: all 0.15s ease;
+    }
 
     /* =========================
-       🔑 PEXELS API
-    ========================= */
-    const API_KEY = "I9fR00E1tIU8cuFi8DhhRoMO5RE5gTCpIBmW6CcBjrLSl1lnLap9tAFV";
+   🧱 CONTAINER
+========================= */
+    .card-container {
+        padding: 16px;
+        max-width: 500px;
+        margin: auto;
+        overflow: hidden;
+        /* chống tràn */
+        text-align: center;
+        font-family: system-ui, sans-serif;
 
-    /* =========================
-       🔍 KEYWORD
-       ví dụ lấy từ mặt trước
-    ========================= */
-    const keyword = `{{Mặt trước}}`
-        .replace(/\(.*?\)/g, "") // bỏ hiragana trong ()
-        .replace(/\/.*/g, "")    // bỏ romaji
-        .trim();
+        /* glass effect */
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(10px);
+        border-radius: 16px;
 
-    /* =========================
-       🖼️ SEARCH IMAGE
-    ========================= */
-    async function searchImage(keyword) {
+        min-height: 300px;
+    }
 
-        try {
+    .answer {
+        padding: 16px 20px;
 
-            const response = await fetch(
-                `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=1`,
-                {
-                    headers: {
-                        Authorization: API_KEY
-                    }
-                }
-            );
+        font-size: 28px;
+        font-weight: 700;
+        line-height: 1.6;
 
-            const data = await response.json();
+        color: white;
+        text-align: center;
 
-            console.log(data);
+        /* glass effect */
+        background: rgba(255, 255, 255, 0.12);
 
-            // không có ảnh
-            if (!data.photos || data.photos.length === 0) {
-                console.log("Không tìm thấy ảnh");
-                return;
-            }
+        backdrop-filter: blur(14px);
+        -webkit-backdrop-filter: blur(14px);
 
-            // lấy ảnh đầu tiên
-            const imageUrl = data.photos[0].src.large2x;
+        border: 1px solid rgba(255, 255, 255, 0.2);
 
-            /* =========================
-               🎨 SET BACKGROUND
-            ========================= */
-            document.body.style.backgroundImage =
-                `url("${imageUrl}")`;
+        border-radius: 20px;
 
-            document.body.style.backgroundSize = "cover";
-            document.body.style.backgroundPosition = "center";
-            document.body.style.backgroundRepeat = "no-repeat";
-            document.body.style.backgroundAttachment = "fixed";
+        /* shadow */
+        box-shadow:
+            0 8px 32px rgba(0, 0, 0, 0.25);
 
-            // overlay tối nhẹ cho dễ đọc chữ
-            document.body.style.position = "relative";
+        /* spacing */
+        margin: 20px auto;
 
-        } catch (error) {
-            console.error("Lỗi:", error);
+        /* responsive */
+        width: fit-content;
+        max-width: 90%;
+
+        /* chống text dính sát */
+        word-break: break-word;
+
+        /* glow text */
+        text-shadow:
+            0 2px 8px rgba(0, 0, 0, 0.5);
+    }
+
+    .answer {
+        animation: fadeIn 0.4s ease;
+    }
+
+    @keyframes fadeIn {
+        from {
+            opacity: 0;
+            transform: translateY(10px);
+        }
+
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
     }
 
-    searchImage(keyword);
+    .answer {
+        letter-spacing: 1px;
+        font-family:
+            "Noto Sans JP",
+            "Hiragino Sans",
+            sans-serif;
+    }
 
-		const raw = `{{Mặt trước}}`;
+    .card-container {
+        background: transparent !important;
+        backdrop-filter: none !important;
+    }
+</style>
 
-    // lấy phần trước (
-    let kanji = raw.split("(")[0];
+<script>
+    (async function () {
 
-    // nếu không có ( thì bỏ phần /
-    kanji = kanji.split("/")[0];
+        /* =========================
+           🔑 PEXELS API
+        ========================= */
+        const API_KEY = "I9fR00E1tIU8cuFi8DhhRoMO5RE5gTCpIBmW6CcBjrLSl1lnLap9tAFV";
 
-    document.getElementById("kanjiOnly").innerText =
-        kanji.trim();
+        /* =========================
+           🔍 KEYWORD
+           ví dụ lấy từ mặt trước
+        ========================= */
+        const keyword = `{{Mặt trước}}`
+            .replace(/\(.*?\)/g, "") // bỏ hiragana trong ()
+            .replace(/\/.*/g, "")    // bỏ romaji
+            .trim();
 
-})();
+        /* =========================
+           🖼️ SEARCH IMAGE
+        ========================= */
+        async function searchImage(keyword) {
+
+            try {
+
+                const response = await fetch(
+                    `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=1`,
+                    {
+                        headers: {
+                            Authorization: API_KEY
+                        }
+                    }
+                );
+
+                const data = await response.json();
+
+                console.log(data);
+
+                // không có ảnh
+                if (!data.photos || data.photos.length === 0) {
+                    console.log("Không tìm thấy ảnh");
+                    return;
+                }
+
+                // lấy ảnh đầu tiên
+                const imageUrl = data.photos[0].src.large2x;
+
+                /* =========================
+                   🎨 SET BACKGROUND
+                ========================= */
+                document.body.style.backgroundImage =
+                    `url("${imageUrl}")`;
+
+                document.body.style.backgroundSize = "cover";
+                document.body.style.backgroundPosition = "center";
+                document.body.style.backgroundRepeat = "no-repeat";
+                document.body.style.backgroundAttachment = "fixed";
+
+                // overlay tối nhẹ cho dễ đọc chữ
+                document.body.style.position = "relative";
+
+            } catch (error) {
+                console.error("Lỗi:", error);
+            }
+        }
+
+        searchImage(keyword);
+
+        const raw = `{{Mặt trước}}`;
+
+        // lấy phần trước (
+        let kanji = raw.split("(")[0];
+
+        // nếu không có ( thì bỏ phần /
+        kanji = kanji.split("/")[0];
+
+        document.getElementById("kanjiOnly").innerText =
+            kanji.trim();
+
+    })();
 </script>
