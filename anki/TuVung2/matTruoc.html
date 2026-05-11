@@ -170,7 +170,19 @@
         const raw = `{{Mặt trước}}`;
 
         // lấy phần trước (
-        let kanji = raw.split("(")[0];
+        let kanji = raw
+            .split(";")
+            .map(x => {
+
+                // bỏ hiragana
+                x = x.replace(/\(.*?\)/g, "").trim();
+
+                // bỏ romaji
+                x = x.split("/")[0].trim();
+
+                return x;
+            })
+            .join("\n");
 
         // nếu không có ( thì bỏ phần /
         kanji = kanji.split("/")[0];
