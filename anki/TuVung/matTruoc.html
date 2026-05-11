@@ -283,6 +283,8 @@
          * - lưu số lần sai vào attempts nếu không có lỗi (để biết độ khó của card)
          * - lưu lỗi vào messageError nếu có lỗi (để cải thiện gợi ý)
          */
+        const MAX_ATTEMPTS_PER_CARD = 20;
+
         function saveStats(value, err = "") {
             // lấy dữ liệu cũ
             let stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
@@ -301,6 +303,9 @@
             }
             else {
                 stats[cardKey].attempts.push(value);
+                if (stats[cardKey].attempts.length > MAX_ATTEMPTS_PER_CARD) {
+                    stats[cardKey].attempts = stats[cardKey].attempts.slice(-MAX_ATTEMPTS_PER_CARD);
+                }
             }
 
             localStorage.setItem("cardStats", JSON.stringify(stats));
