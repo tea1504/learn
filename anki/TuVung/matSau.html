@@ -55,7 +55,7 @@
         const difficulty = Math.min(100, (avg / maxFail) * 100);
 
         function renderBar(percent) {
-            const total = 10;
+            const total = 40;
             const filled = Math.round((percent / 100) * total);
             return "█".repeat(filled) + "░".repeat(total - filled);
         }
