@@ -1,8 +1,50 @@
 <div class="card-container">
     <div class="answer">{{Mặt sau}}</div>
 
-    <div class="answer">{{Mặt trước}}</div>
+    <div class="answer" id="jpAnswer"></div>
 </div>
+
+<script>
+    (function () {
+
+        const raw = `{{Mặt trước}}`;
+
+        const html = raw
+            .split(";")
+            .map(item => {
+
+                item = item.trim();
+
+                const match = item.match(/^(.*?)\((.*?)\)\/(.*)$/);
+
+                // không match thì giữ nguyên
+                if (!match) {
+                    return item;
+                }
+
+                const kanji = match[1].trim();
+                const hira = match[2].trim();
+                const roma = match[3].trim();
+
+                return `
+                <div class="jp-item">
+                    <ruby>
+                        ${kanji}
+                        <rt>${hira}</rt>
+                    </ruby>
+
+                    <div class="roma">
+                        ${roma}
+                    </div>
+                </div>
+            `;
+            })
+            .join("<hr />");
+
+        document.getElementById("jpAnswer").innerHTML = html;
+
+    })();
+</script>
 
 <style>
     /* =========================
@@ -99,5 +141,23 @@
     .card-container {
         background: transparent !important;
         backdrop-filter: none !important;
+    }
+
+    .jp-item {
+        display: inline-flex;
+        flex-direction: column;
+        align-items: center;
+
+        margin: 0 12px;
+    }
+
+    rt {
+        font-size: 14px;
+        color: #facc15;
+    }
+
+    .roma {
+        font-size: 12px;
+        opacity: 0.7;
     }
 </style>
