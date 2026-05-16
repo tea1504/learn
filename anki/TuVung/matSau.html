@@ -7,6 +7,13 @@
 
 </div>
 
+<style>
+    .buttons,
+    .checkboxes {
+        display: flex;
+    }
+</style>
+
 <script>
     (function () {
 
@@ -51,11 +58,11 @@
         /* =========================
            🔥 DIFFICULTY
         ========================= */
-        const maxFail = 3;
+        const maxFail = 10;
         const difficulty = Math.min(100, (avg / maxFail) * 100);
 
         function renderBar(percent) {
-            const total = 40;
+            const total = 20;
             const filled = Math.round((percent / 100) * total);
             return "█".repeat(filled) + "░".repeat(total - filled);
         }
@@ -113,8 +120,14 @@
             // tạo từng row lỗi
             const errorRows = messageErrors.map((err, i) => `
                 <tr>
-                    <td style="border: 1px solid #ddd; padding: 8px; text-align: center;">${i + 1}</td>
-                    <td style="border: 1px solid #ddd; padding: 8px;">${err}</td>
+                    <td style="border: 1px solid #ddd; text-align: center;" rowspan="2">${i + 1}</td>
+                    <td style="border: 1px solid #ddd; background-color: #f0f0f0; width: 60px;">Đáp án</td>
+                    <td style="border: 1px solid #ddd;">${err.err1}</td>
+                    <td style="border: 1px solid #ddd;" rowspan="2">${err.hint}</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; background-color: #f0f0f0;">Nhập</td>
+                    <td style="border: 1px solid #ddd;">${err.err2}</td>
                 </tr>
             `).join('');
             // tạo bảng lỗi hoàn chỉnh
@@ -124,8 +137,9 @@
                     <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                         <thead>
                             <tr>
-                                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f0f0f0; text-align: center; width: 30px;">STT</th>
-                                <th style="border: 1px solid #ddd; padding: 8px; background-color: #f0f0f0;">Chi tiết lỗi</th>
+                                <th style="border: 1px solid #ddd; background-color: #f0f0f0; text-align: center; width: 30px;">STT</th>
+                                <th style="border: 1px solid #ddd; background-color: #f0f0f0;" colspan="2">Chi tiết lỗi</th>
+                                <th style="border: 1px solid #ddd; background-color: #f0f0f0;">Gợi ý</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -159,8 +173,21 @@
 
         </div>
         <div style="margin-top:10px;">
-            <button id="copyBtn">📋 Copy</button>
-            <button id="copyErr">❌ Lỗi</button>
+            <div class="buttons">
+                <button id="copyBtn">📋 Copy</button>
+                <button id="copyErr">❌ Lỗi</button>
+            </div>
+            
+            <div class="checkboxes">
+                <label><input type="checkbox" id="cbHanTu"> Hán tự</label>
+                <label><input type="checkbox" id="cbCachDung"> Cách dùng</label>
+                <label><input type="checkbox" id="cbViDu"> Ví Dụ</label>
+                <label><input type="checkbox" id="cbMoRong"> Mở rộng</label>
+                <label><input type="checkbox" id="cbNguPhap"> Ngữ pháp</label>
+                <label><input type="checkbox" id="cbLoi"> Lỗi</label>
+                <label><input type="checkbox" id="cbThamKhao"> Tham khảo</label>
+                <label><input type="checkbox" id="cbNangCao"> Nâng cao</label>
+            </div>
         </div>
         <br />
         ${errorTableHTML}
@@ -175,7 +202,76 @@
                 const front = document.querySelectorAll(".answer")[0]?.innerText || "";
                 const back = document.querySelectorAll(".answer")[1]?.innerText || "";
 
-                const text = `Bạn là chuyên gia ngôn ngữ Nhật Bản và giảng viên từ vựng nâng cao. Dữ liệu đầu vào:\n${front}\n${back}\nHãy phân tích cực kỳ chi tiết từ/cụm từ tiếng Nhật xuất hiện trong dữ liệu trên.\nYêu cầu trình bày rõ ràng, có cấu trúc:\n1. Thông tin cơ bản:\n- Từ gốc (kanji/kana)\n- Furigana đầy đủ\n- Nghĩa tiếng Việt + tiếng Anh\n- Loại từ\n2. Phân tích Kanji (nếu có):\n- Từng chữ Hán cấu thành\n- Âm On/Kun\n- Ý nghĩa từng chữ\n- Phân loại theo Lục thư (象形, 指事, 会意, 形声...)\n- Gợi ý cách ghi nhớ (mnemonic)\n3. Cách dùng:\n- Trong giao tiếp hằng ngày (kèm ví dụ hội thoại)\n- Trong văn viết trang trọng\n- Trong lĩnh vực CNTT (nếu có)\n- Sắc thái (formal/informal, nuance)\n4. Ví dụ:\n- Ít nhất 5 câu ví dụ (có furigana(cuối câu) + dịch, dựa trên chủ đề {{Deck}}, nếu có mô tả bối cảnh thì càng tốt)\n- 1 đoạn hội thoại ngắn\n5. Mở rộng:\n- Từ đồng nghĩa (kèm so sánh nuance)\n- Từ trái nghĩa\n- Collocations phổ biến\n- Thành ngữ / biểu hiện liên quan (nếu có)\n6. Ngữ pháp liên quan:\n- Các mẫu ngữ pháp thường đi kèm\n7. Lỗi thường gặp:\n- Những lỗi người học hay mắc\n8. Tài nguyên tham khảo:\n- Cung cấp link từ nguồn đáng tin cậy (từ điển, website học tiếng Nhật)\n9. Insight nâng cao:\n- Phân tích dành cho người học trình độ trung - cao cấp\nYêu cầu bổ sung:\n- Trình bày bằng tiếng Việt\n- Format rõ ràng (heading + bullet points)\n- Không bỏ sót mục nào\n- Nếu dữ liệu ${front} và ${back} mâu thuẫn → phân tích và giải thích\n- Nếu thiếu thông tin → ghi rõ "Không áp dụng"`;
+                let index = 2;
+
+                let text = `Bạn là chuyên gia ngôn ngữ Nhật Bản và giảng viên từ vựng nâng cao. \n`;
+                text += `Dữ liệu đầu vào:\n`;
+                text += `${front}\n${back}\n`;
+                text += `Hãy phân tích cực kỳ chi tiết từ/cụm từ tiếng Nhật xuất hiện trong dữ liệu trên.\n`;
+                text += `Yêu cầu trình bày rõ ràng, có cấu trúc:\n`;
+
+                text += `1. Thông tin cơ bản:\n`;
+                text += `- Từ gốc (kanji/kana)\n`;
+                text += `- Furigana đầy đủ\n`;
+                text += `- Nghĩa tiếng Việt + tiếng Anh\n`;
+                text += `- Loại từ\n`;
+
+                if (cbHanTu.checked) {
+                    text += `${index++}. Phân tích Kanji (nếu có):\n`;
+                    text += `- Từng chữ Hán cấu thành\n`;
+                    text += `- Âm On/Kun\n- Ý nghĩa từng chữ\n`;
+                    text += `- Phân loại theo Lục thư (象形, 指事, 会意, 形声...)\n`;
+                    text += `- Gợi ý cách ghi nhớ (mnemonic)\n`;
+                }
+
+                if (cbCachDung.checked) {
+                    text += `${index++}. Cách dùng:\n`;
+                    text += `- Trong giao tiếp hằng ngày (kèm ví dụ hội thoại)\n`;
+                    text += `- Trong văn viết trang trọng\n`;
+                    text += `- Trong lĩnh vực CNTT (nếu có)\n`;
+                    text += `- Sắc thái (formal/informal, nuance)\n`;
+                }
+
+                if (cbViDu.checked) {
+                    text += `${index++}. Ví dụ:\n`;
+                    text += `- Ít nhất 5 câu ví dụ (có furigana(cuối câu) + dịch, dựa trên chủ đề {{Deck}} và các từ vựng đã học phía trước, có mô tả bối cảnh)\n`;
+                    text += `- 1 đoạn hội thoại ngắn\n`;
+                }
+
+                if (cbMoRong.checked) {
+                    text += `${index++}. Mở rộng:\n`;
+                    text += `- Từ đồng nghĩa (kèm so sánh nuance)\n`;
+                    text += `- Từ trái nghĩa\n`;
+                    text += `- Collocations phổ biến\n`;
+                    text += `- Thành ngữ / biểu hiện liên quan (nếu có)\n`;
+                }
+
+                if (cbNguPhap.checked) {
+                    text += `${index++}. Ngữ pháp liên quan:\n`;
+                    text += `- Các mẫu ngữ pháp thường đi kèm\n`;
+                }
+
+                if (cbLoi.checked) {
+                    text += `${index++}. Lỗi thường gặp:\n`;
+                    text += `- Những lỗi người học hay mắc\n`;
+                }
+
+                if (cbThamKhao.checked) {
+                    text += `${index++}. Tài nguyên tham khảo:\n`;
+                    text += `- Cung cấp link từ nguồn đáng tin cậy (từ điển, website học tiếng Nhật)\n`;
+                }
+
+                if (cbNangCao.checked) {
+                    text += `${index++}. Insight nâng cao:\n`;
+                    text += `- Phân tích dành cho người học trình độ trung - cao cấp\n`;
+                }
+
+                text += `Yêu cầu bổ sung:\n`;
+                text += `- Trình bày bằng tiếng Việt\n`;
+                text += `- Format rõ ràng (heading + bullet points)\n`;
+                text += `- Không bỏ sót mục nào\n`;
+                text += `- Nếu dữ liệu ${front} và ${back} mâu thuẫn → phân tích và giải thích\n`;
+                text += `- Nếu thiếu thông tin → ghi rõ "Không áp dụng"`;
 
                 try {
                     await navigator.clipboard.writeText(text);
@@ -216,7 +312,7 @@
 
                 // cộng dồn tất cả lỗi vào text
                 messageErrors.forEach((err, i) => {
-                    text += `Lỗi ${i + 1}: ${err}\n`;
+                    text += `Lỗi ${i + 1}: ${err.err2}\n`;
                 });
 
                 // đặt câu hỏi
@@ -244,6 +340,7 @@
                 }, 1500);
             };
         }, 0);
+
         /* =========================
            🎨 DRAW CHART (fix blur + width)
         ========================= */
@@ -333,7 +430,60 @@
             requestAnimationFrame(drawChart);
         });
 
-        stats[cardKey].messageError = [];
+        setTimeout(() => {
+            const cbHanTu = document.getElementById('cbHanTu');
+            const cbCachDung = document.getElementById('cbCachDung');
+            const cbViDu = document.getElementById('cbViDu');
+            const cbMoRong = document.getElementById('cbMoRong');
+            const cbNguPhap = document.getElementById('cbNguPhap');
+            const cbLoi = document.getElementById('cbLoi');
+            const cbThamKhao = document.getElementById('cbThamKhao');
+            const cbNangCao = document.getElementById('cbNangCao');
+
+            cbHanTu.checked = localStorage.getItem("cbHanTu") === "true";
+            cbCachDung.checked = localStorage.getItem("cbCachDung") === "true";
+            cbViDu.checked = localStorage.getItem("cbViDu") === "true";
+            cbMoRong.checked = localStorage.getItem("cbMoRong") === "true";
+            cbNguPhap.checked = localStorage.getItem("cbNguPhap") === "true";
+            cbLoi.checked = localStorage.getItem("cbLoi") === "true";
+            cbThamKhao.checked = localStorage.getItem("cbThamKhao") === "true";
+            cbNangCao.checked = localStorage.getItem("cbNangCao") === "true";
+
+            cbHanTu.addEventListener('change', (event) => {
+                localStorage.setItem("cbHanTu", event.target.checked);
+            });
+
+            cbCachDung.addEventListener('change', (event) => {
+                localStorage.setItem("cbCachDung", event.target.checked);
+            });
+
+            cbViDu.addEventListener('change', (event) => {
+                localStorage.setItem("cbViDu", event.target.checked);
+            });
+
+            cbMoRong.addEventListener('change', (event) => {
+                localStorage.setItem("cbMoRong", event.target.checked);
+            });
+
+            cbNguPhap.addEventListener('change', (event) => {
+                localStorage.setItem("cbNguPhap", event.target.checked);
+            });
+
+            cbLoi.addEventListener('change', (event) => {
+                localStorage.setItem("cbLoi", event.target.checked);
+            });
+
+            cbThamKhao.addEventListener('change', (event) => {
+                localStorage.setItem("cbThamKhao", event.target.checked);
+            });
+
+            cbNangCao.addEventListener('change', (event) => {
+                localStorage.setItem("cbNangCao", event.target.checked);
+            });
+
+        }, 0);
+
+        // stats[cardKey].messageError = [];
         localStorage.setItem("cardStats", JSON.stringify(stats));
 
     })();

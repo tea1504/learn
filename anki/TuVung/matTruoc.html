@@ -1,25 +1,28 @@
 <div class="card-container">
-
     <!-- Hiển thị đáp án (ẩn/hiện tùy logic Anki) -->
     <div class="answer">{{Mặt sau}}</div>
-
     <!-- Typing của Anki -->
     <div class="typing">
         {{type:Mặt trước}}
     </div>
-
     <!-- Input custom -->
     <div class="custom-input">
         <input id="myInput" placeholder="Nhập..." />
-
         <div id="result"></div>
         <div id="hint"></div>
-
-        <button id="submitBtn">Submit</button>
-        <button id="showBtn">Gợi ý</button>
+        <!-- Buttons -->
+        <div class="buttons">
+            <button id="submitBtn">Submit</button>
+            <button id="showBtn">Gợi ý</button>
+        </div>
     </div>
-
 </div>
+
+<style>
+    .buttons {
+        display: flex;
+    }
+</style>
 
 <script>
     (function () {
@@ -285,7 +288,7 @@
          */
         const MAX_ATTEMPTS_PER_CARD = 20;
 
-        function saveStats(value, err = "") {
+        function saveStats(value, err1 = "", err2 = "", hint = "") {
             // lấy dữ liệu cũ
             let stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
 
@@ -298,8 +301,8 @@
 
             // lưu dữ liệu mới
             // nếu có lỗi thì lưu vào messageError, ngược lại lưu số lần sai vào attempts
-            if (err) {
-                stats[cardKey].messageError.push(err);
+            if (err1 || err2) {
+                stats[cardKey].messageError.push({ err1, err2, hint });
             }
             else {
                 stats[cardKey].attempts.push(value);
@@ -341,7 +344,7 @@
 
                 // chỉ lưu nếu sai hoặc lần đầu (để có dữ liệu cải thiện)
                 if (fail > 0 || isFirst) {
-                    saveStats(fail, "");
+                    saveStats(fail, "", "");
                 }
 
                 // reset
@@ -371,9 +374,9 @@
                  * - tính tổng lỗi để đánh giá mức độ sai của input của user
                  */
                 answers.forEach(ansObj => {
-                    
+
                     let ans = ansObj.roma;
-                    
+
                     if (containsKanji(userInput)) {
                         ans = ansObj.kanji;
                     }
@@ -428,12 +431,12 @@
                 input.select();
 
                 // lưu lỗi vào messageError để cải thiện gợi ý sau này
-                saveStats(fail, `Đáp án là ${answers.map(a => a.roma).join("; ")}, nhưng tôi nhập là ${userInput}. Sau khi tôi nhập thì gợi ý là ${html.replace(/<span class="correct">/g, "").replace(/<\/span>/g, "").replace(/<span class="missing">/g, "")}`);
+                saveStats(fail, answers.map(a => a.roma).join("; "), userInput, html.replace(/<span class="correct">/g, "").replace(/<\/span>/g, "").replace(/<span class="missing">/g, ""));
             }
 
             if (isShowingAnswer) {
                 // lưu lỗi vào messageError để cải thiện gợi ý sau này
-                saveStats(fail, `Tôi đã quên từ này hãy giúp tôi nhớ`);
+                saveStats(fail, `Tôi đã quên từ này hãy giúp tôi nhớ`, "", "");
                 // reset lại trạng thái đã show đáp án để lần sau sẽ không show nữa
                 isShowingAnswer = false;
             }
