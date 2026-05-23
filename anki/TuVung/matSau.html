@@ -1,6 +1,6 @@
 <div class="card-container">
     <div class="answer">{{Mặt trước}}</div>
-
+    <hr />
     <div class="answer">{{Mặt sau}}</div>
 
     <div id="analytics"></div>
@@ -24,6 +24,19 @@
         if (!raw) return;
 
         const cardKey = encodeURIComponent(raw);
+        const FAILED_WORDS_KEY = "failedWords";
+
+        function getFailedWords() {
+            try {
+                return JSON.parse(localStorage.getItem(FAILED_WORDS_KEY) || "[]");
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function getFailedWordsString() {
+            return getFailedWords().join(",");
+        }
 
         const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
         const container = document.getElementById("analytics");
@@ -39,12 +52,9 @@
         const messageErrors = stats[cardKey].messageError || [];
         const recent = attempts;
 
-        /* =========================
-           📊 STATS
-        ========================= */
         const avg = attempts.reduce((a, b) => a + b, 0) / attempts.length;
-        const last = attempts[attempts.length - 1];
-        const prev = attempts[attempts.length - 2];
+        const last = tinhTrungBinh(attempts, 0);
+        const prev = tinhTrungBinh(attempts, 1);
 
         /* =========================
            📉 TREND (so với lần trước)
@@ -60,6 +70,19 @@
         ========================= */
         const maxFail = 10;
         const difficulty = Math.min(100, (avg / maxFail) * 100);
+        const currentDifficulty = Math.min(100, (last / maxFail) * 100);
+        const prevDifficulty = prev !== undefined ? Math.min(100, (prev / maxFail) * 100) : null;
+        const difficultyChange = prevDifficulty !== null ? currentDifficulty - prevDifficulty : null;
+        const difficultyChangeText = difficultyChange === null
+            ? ""
+            : difficultyChange === 0
+                ? "➡️ Không đổi"
+                : difficultyChange > 0
+                    ? `📈 Tăng ${difficultyChange.toFixed(0)}%`
+                    : `📉 Giảm ${Math.abs(difficultyChange).toFixed(0)}%`;
+        const difficultyInfo = prevDifficulty !== null
+            ? `Độ khó lần này: ${currentDifficulty.toFixed(0)}% · Lần trước: ${prevDifficulty.toFixed(0)}% (${difficultyChangeText})`
+            : `Độ khó lần này: ${currentDifficulty.toFixed(0)}%`;
 
         function renderBar(percent) {
             const total = 20;
@@ -167,6 +190,7 @@
             <div>
                 🔥 Độ khó:
                 <div>${diffBar} ${difficulty.toFixed(0)}%</div>
+                <div style="font-size: 0.95em; margin-top: 4px;">${difficultyInfo}</div>
             </div>
 
             <div>${stability}</div>
@@ -207,13 +231,19 @@
                 let text = `Bạn là chuyên gia ngôn ngữ Nhật Bản và giảng viên từ vựng nâng cao. \n`;
                 text += `Dữ liệu đầu vào:\n`;
                 text += `${front}\n${back}\n`;
-                text += `Hãy phân tích cực kỳ chi tiết từ/cụm từ tiếng Nhật xuất hiện trong dữ liệu trên.\n`;
-                text += `Yêu cầu trình bày rõ ràng, có cấu trúc:\n`;
+                text += `Số lần đã học: ${attempts.length}\n`;
+
+                text += `0. Thông tin lịch sử học:\n`;
+                text += `- Độ khó tự đánh giá là ${difficulty.toFixed(0)}%\n`;
+                text += `- ${difficultyInfo}%\n`;
+                text += `- Xu hướng ${trendText}\n`;
+                text += `- Nghĩa Nhật - Việt + Nhật - Nhật\n`;
+                text += `- Loại từ\n`;
 
                 text += `1. Thông tin cơ bản:\n`;
                 text += `- Từ gốc (kanji/kana)\n`;
                 text += `- Furigana đầy đủ\n`;
-                text += `- Nghĩa tiếng Việt + tiếng Anh\n`;
+                text += `- Nghĩa Nhật - Việt + Nhật - Nhật\n`;
                 text += `- Loại từ\n`;
 
                 if (cbHanTu.checked) {
@@ -234,7 +264,7 @@
 
                 if (cbViDu.checked) {
                     text += `${index++}. Ví dụ:\n`;
-                    text += `- Ít nhất 5 câu ví dụ (có furigana(cuối câu) + dịch, dựa trên chủ đề {{Deck}} và các từ vựng đã học phía trước, có mô tả bối cảnh)\n`;
+                    text += `- Ít nhất 5 câu ví dụ (có furigana(cuối câu) + dịch, dựa trên chủ đề {{Deck}} và các từ vựng đã học phía trước (${getFailedWordsString()}), có mô tả bối cảnh)\n`;
                     text += `- 1 đoạn hội thoại ngắn\n`;
                 }
 
@@ -266,12 +296,13 @@
                     text += `- Phân tích dành cho người học trình độ trung - cao cấp\n`;
                 }
 
-                text += `Yêu cầu bổ sung:\n`;
-                text += `- Trình bày bằng tiếng Việt\n`;
-                text += `- Format rõ ràng (heading + bullet points)\n`;
-                text += `- Không bỏ sót mục nào\n`;
-                text += `- Nếu dữ liệu ${front} và ${back} mâu thuẫn → phân tích và giải thích\n`;
-                text += `- Nếu thiếu thông tin → ghi rõ "Không áp dụng"`;
+                text += `${index++}. Yêu cầu bổ sung:\n`;
+                text += `- Trả lời ngắn ngọn đúng trọng tâm câu hỏi. Không trả thêm, không lang mang \n`;
+                //text += `- Trình bày bằng tiếng Việt\n`;
+                //text += `- Format rõ ràng (heading + bullet points)\n`;
+                //text += `- Không bỏ sót mục nào\n`;
+                //text += `- Nếu dữ liệu ${front} và ${back} mâu thuẫn → phân tích và giải thích\n`;
+                //text += `- Nếu thiếu thông tin → ghi rõ "Không áp dụng"`;
 
                 try {
                     await navigator.clipboard.writeText(text);
@@ -483,8 +514,36 @@
 
         }, 0);
 
-        // stats[cardKey].messageError = [];
+        stats[cardKey].messageError = [];
         localStorage.setItem("cardStats", JSON.stringify(stats));
 
     })();
+
+    function tinhTrungBinh(arrKetQua = [], intKhoanCach = 0) {
+        if (!arrKetQua || arrKetQua.length === 0) {
+            return 0;
+        }
+        
+        if (arrKetQua[arrKetQua.length - 1] === 0) {
+            return 0;
+        }
+        
+        if (arrKetQua.length - intKhoanCach === 0) {
+            return 0;
+        }
+
+        let index = 0;
+
+        for (let i = 0; i < arrKetQua.length - intKhoanCach; i++) {
+            if (arrKetQua[i] > 0) {
+                index = i;
+            }
+        }
+
+        const arrKetQuaTheoIndex = arrKetQua.slice(0, index + 1);
+        if (arrKetQuaTheoIndex.length === 0) {
+            return 0;
+        }
+        return arrKetQuaTheoIndex.reduce((a, b) => a + b, 0) / arrKetQuaTheoIndex.length;
+    }
 </script>

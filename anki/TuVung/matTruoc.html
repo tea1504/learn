@@ -287,6 +287,36 @@
          * - lưu lỗi vào messageError nếu có lỗi (để cải thiện gợi ý)
          */
         const MAX_ATTEMPTS_PER_CARD = 20;
+        const FAILED_WORDS_KEY = "failedWords";
+
+        function getFailedWords() {
+            try {
+                return JSON.parse(localStorage.getItem(FAILED_WORDS_KEY) || "[]");
+            } catch (e) {
+                return [];
+            }
+        }
+
+        function setFailedWords(list) {
+            localStorage.setItem(FAILED_WORDS_KEY, JSON.stringify(list));
+        }
+
+        function addFailedWord(word) {
+            const list = getFailedWords();
+            if (!list.includes(word)) {
+                list.push(word);
+                setFailedWords(list);
+            }
+        }
+
+        function removeFailedWord(word) {
+            const list = getFailedWords().filter(item => item !== word);
+            if (list.length === 0) {
+                localStorage.removeItem(FAILED_WORDS_KEY);
+            } else {
+                setFailedWords(list);
+            }
+        }
 
         function saveStats(value, err1 = "", err2 = "", hint = "") {
             // lấy dữ liệu cũ
@@ -347,6 +377,9 @@
                     saveStats(fail, "", "");
                 }
 
+                // nếu đã pass thì xóa khỏi danh sách từ đang fail
+                removeFailedWord(raw);
+
                 // reset
                 fail = 0;
                 // sau lần nhập đầu tiên, các lần sau sẽ không còn là "lần đầu" nữa
@@ -362,6 +395,8 @@
                 result.innerHTML = "❌ NOT PASS";
                 // tăng số lần sai
                 fail++;
+                // lưu từ đang fail vào localStorage
+                addFailedWord(raw);
                 // tạo gợi ý từng chữ dựa trên input của user và đáp án đúng
                 let html = "";
                 // tính tổng lỗi để đánh giá mức độ sai của input của user
