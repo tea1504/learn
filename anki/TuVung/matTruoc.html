@@ -302,15 +302,29 @@
         }
 
         function addFailedWord(word) {
+            let kanji = parseAnswers(word)[0].kanji;
+            if (kanji === null || kanji === "") {
+                kanji = parseAnswers(raw)[0].hira;
+            }
+            if (kanji === null || kanji === "") {
+                kanji = parseAnswers(raw)[0].roma;
+            }
             const list = getFailedWords();
-            if (!list.includes(word)) {
-                list.push(word);
+            if (!list.includes(kanji)) {
+                list.push(kanji);
                 setFailedWords(list);
             }
         }
 
         function removeFailedWord(word) {
-            const list = getFailedWords().filter(item => item !== word);
+            let kanji = parseAnswers(word)[0].kanji;
+            if (kanji === null || kanji === "") {
+                kanji = parseAnswers(raw)[0].hira;
+            }
+            if (kanji === null || kanji === "") {
+                kanji = parseAnswers(raw)[0].roma;
+            }
+            const list = getFailedWords().filter(item => item !== kanji);
             if (list.length === 0) {
                 localStorage.removeItem(FAILED_WORDS_KEY);
             } else {
@@ -340,7 +354,7 @@
                     stats[cardKey].attempts = stats[cardKey].attempts.slice(-MAX_ATTEMPTS_PER_CARD);
                 }
             }
-
+            addFailedWord(raw);
             localStorage.setItem("cardStats", JSON.stringify(stats));
         }
 
@@ -377,8 +391,10 @@
                     saveStats(fail, "", "");
                 }
 
-                // nếu đã pass thì xóa khỏi danh sách từ đang fail
-                removeFailedWord(raw);
+                if (fail === 0 && isFirst) {
+                    // nếu đã pass thì xóa khỏi danh sách từ đang fail
+                    removeFailedWord(raw);
+                }
 
                 // reset
                 fail = 0;
@@ -395,8 +411,6 @@
                 result.innerHTML = "❌ NOT PASS";
                 // tăng số lần sai
                 fail++;
-                // lưu từ đang fail vào localStorage
-                addFailedWord(raw);
                 // tạo gợi ý từng chữ dựa trên input của user và đáp án đúng
                 let html = "";
                 // tính tổng lỗi để đánh giá mức độ sai của input của user
