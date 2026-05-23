@@ -422,6 +422,22 @@
 
             const color = last < avg ? "#22c55e" : "#ef4444";
 
+            // Duong Giong
+            // LINE
+            ctx.beginPath();
+            ctx.lineWidth = 1;
+            ctx.strokeStyle = color + "33";
+
+            const khoanCachMax = max;
+            const khoanCach = height / khoanCachMax;
+
+            for (let i = 0; i < khoanCachMax; i++) {
+                ctx.moveTo(0, i * khoanCach);
+                ctx.lineTo(width, i * khoanCach);
+            }
+
+            ctx.stroke();
+
             // LINE
             ctx.beginPath();
             ctx.lineWidth = 2;
@@ -446,13 +462,22 @@
 
             // POINTS
             recent.forEach((v, i) => {
-                const x = i * stepX;
-                const y = height - (v / max) * height;
+                let x = i * stepX;
+                let y = height - (v / max) * height;
 
                 ctx.beginPath();
                 ctx.arc(x, y, 3, 0, Math.PI * 2);
                 ctx.fillStyle = color;
                 ctx.fill();
+                ctx.font = "15px sans-serif";
+                ctx.fillStyle = "#000";
+                if (y === 0) {
+                    y += 10;
+                }
+                if (x === width) {
+                    x -= 15;
+                }
+                ctx.fillText(v, x, y);
             });
         }
 
@@ -523,11 +548,11 @@
         if (!arrKetQua || arrKetQua.length === 0) {
             return 0;
         }
-        
+
         if (arrKetQua[arrKetQua.length - 1] === 0) {
             return 0;
         }
-        
+
         if (arrKetQua.length - intKhoanCach === 0) {
             return 0;
         }
