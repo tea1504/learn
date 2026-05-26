@@ -8,6 +8,10 @@
     <div class="buttons">
         <button id="deleteBtn">Xoá localStorage</button>
     </div>
+    <div class="checkboxes">
+        <label><input type="checkbox" id="cbDateMode"> Date Mode</label>
+    </div>
+    <div id="logBox"></div>
 </div>
 
 <style>
@@ -15,16 +19,43 @@
     .checkboxes {
         display: flex;
     }
+
+    #logBox {
+        width: 500px;
+        height: 200px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        overflow-y: auto;
+        background: #111;
+        color: #0f0;
+        font-family: monospace;
+        text-align: left;
+        font-size: 12px;
+    }
 </style>
 
 <script>
     (function () {
+        const logBox = document.getElementById("logBox");
 
+        function log(...message) {
+            var time = "";
+            message.forEach(line => {
+                time = new Date().toLocaleTimeString();
+                logBox.innerHTML += `[${time}] ${line}<br>`;
+                logBox.scrollTop = logBox.scrollHeight;
+            });
+        }
+
+        log("Bat dau render analytics...");
         /* =========================
            🛡️ SAFE DATA
         ========================= */
-        const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
-        if (!raw) return;
+        var raw = `{{Mặt trước}}`.replace(/\n/g, " ");
+        if (!raw) {
+            log("Raw data is empty");
+            return;
+        }
 
         const htmlContent = `
         <div>
@@ -71,6 +102,8 @@
     `;
         const cardKey = encodeURIComponent(raw);
         const FAILED_WORDS_KEY = "failedWords";
+        const CARDSTATUS = "cardStats";
+        const DATEMODE = "dateMode";
 
         function getFailedWords() {
             try {
@@ -84,7 +117,7 @@
             return getFailedWords().join(",");
         }
 
-        const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+        const stats = JSON.parse(localStorage.getItem(CARDSTATUS) || "{}");
         const container = document.getElementById("analytics");
         const card = document.querySelector(".card-container");
 
@@ -93,14 +126,44 @@
             return;
         }
 
-        const attempts = stats[cardKey].attempts;
-        // nếu chưa có attempt nào → chưa có dữ liệu
-        const messageErrors = stats[cardKey].messageError || [];
-        const recent = attempts;
+        var attempts = { "": 0 };
+        attempts = {};
+        var valuesAttempts = [0];
+        valuesAttempts = [];
+        var messageErrors = [""];
+        messageErrors = [];
+        var attemptsModeDate = { "": 0 }
+        attemptsModeDate = {};
+        var recent = [0];
+        recent = [];
 
-        const avg = attempts.reduce((a, b) => a + b, 0) / attempts.length;
-        const last = tinhTrungBinh(attempts, 0);
-        const prev = tinhTrungBinh(attempts, 1);
+        attempts = stats[cardKey].attempts;
+        Object.entries(attempts).forEach(([time, value]) => {
+            var date = new Date(time);
+            var dateKey = "";
+            dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+            log("attempt at " + dateKey + ": " + value);
+            attemptsModeDate[dateKey] = (attemptsModeDate[dateKey] || 0) + value;
+        });
+
+        if (localStorage.getItem(DATEMODE) === "true") {
+            log("Date mode is ON");
+            valuesAttempts = Object.values(attemptsModeDate);
+        } else {
+            valuesAttempts = Object.values(attempts);
+            log("Date mode is OFF");
+        }
+        recent = valuesAttempts;
+        messageErrors = stats[cardKey].messageError || [];
+        log("attempts", JSON.stringify(attempts));
+        log("attemptsModeDate", JSON.stringify(attemptsModeDate));
+        log("valuesAttempts", valuesAttempts);
+        log("messageErrors", messageErrors);
+
+        var avg = 0.0;
+        avg = valuesAttempts.reduce((a, b) => a + b, 0) / valuesAttempts.length;
+        const last = tinhTrungBinh(valuesAttempts, 0);
+        const prev = tinhTrungBinh(valuesAttempts, 1);
 
         /* =========================
            📉 TREND (so với lần trước)
@@ -142,8 +205,8 @@
            🧠 VARIANCE (sample)
         ========================= */
         const mean = avg;
-        const variance = attempts.length > 1
-            ? attempts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (attempts.length - 1)
+        const variance = valuesAttempts.length > 1
+            ? valuesAttempts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (valuesAttempts.length - 1)
             : 0;
 
         let stability = variance > 2 ? "⚠️ Không ổn định" : "🧠 Ổn định";
@@ -152,8 +215,8 @@
            🔥 STREAK
         ========================= */
         let streak = 0;
-        for (let i = attempts.length - 1; i >= 0; i--) {
-            if (attempts[i] === 0) streak++;
+        for (let i = valuesAttempts.length - 1; i >= 0; i--) {
+            if (valuesAttempts[i] === 0) streak++;
             else break;
         }
 
@@ -165,7 +228,7 @@
         let level = "";
         let levelClass = "";
 
-        const hasFail = attempts[attempts.length - 1] > 0;
+        const hasFail = valuesAttempts[valuesAttempts.length - 1] > 0;
 
         if (hasFail) {
             level = "❌ Học lại";
@@ -393,7 +456,7 @@
             }
 
             btn.onclick = () => {
-                localStorage.removeItem("cardStats");
+                localStorage.removeItem(CARDSTATUS);
                 localStorage.removeItem(FAILED_WORDS_KEY);
                 drawChart();
 
@@ -533,6 +596,7 @@
             const cbLoi = document.getElementById('cbLoi');
             const cbThamKhao = document.getElementById('cbThamKhao');
             const cbNangCao = document.getElementById('cbNangCao');
+            const cbDateMode = document.getElementById('cbDateMode');
 
             cbHanTu.checked = localStorage.getItem("cbHanTu") === "true";
             cbCachDung.checked = localStorage.getItem("cbCachDung") === "true";
@@ -542,6 +606,7 @@
             cbLoi.checked = localStorage.getItem("cbLoi") === "true";
             cbThamKhao.checked = localStorage.getItem("cbThamKhao") === "true";
             cbNangCao.checked = localStorage.getItem("cbNangCao") === "true";
+            cbDateMode.checked = localStorage.getItem(DATEMODE) === "true";
 
             cbHanTu.addEventListener('change', (event) => {
                 localStorage.setItem("cbHanTu", event.target.checked);
@@ -575,6 +640,9 @@
                 localStorage.setItem("cbNangCao", event.target.checked);
             });
 
+            cbDateMode.addEventListener('change', (event) => {
+                localStorage.setItem(DATEMODE, event.target.checked);
+            });
         }, 0);
 
         stats[cardKey].messageError = [];
