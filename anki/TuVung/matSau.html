@@ -5,6 +5,9 @@
 
     <div id="analytics"></div>
 
+    <div class="buttons">
+        <button id="deleteBtn">Xoá localStorage</button>
+    </div>
 </div>
 
 <style>
@@ -23,6 +26,49 @@
         const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
         if (!raw) return;
 
+        const htmlContent = `
+        <div>
+
+            <div class="@levelClass">
+                @level
+            </div>
+
+            <div>🔥 Streak: @streak</div>
+
+            <div>📊 Tiến bộ:</div>
+            <canvas id="chartCanvas" height="80"></canvas>
+
+            <div>@trendText</div>
+
+            <div>
+                🔥 Độ khó:
+                <div>@diffBar @difficulty.toFixed(0)%</div>
+                <div style="font-size: 0.95em; margin-top: 4px;">@difficultyInfo</div>
+            </div>
+
+            <div>@stability</div>
+
+        </div>
+        <div style="margin-top:10px;">
+            <div class="buttons">
+                <button id="copyBtn">📋 Copy</button>
+                <button id="copyErr">❌ Lỗi</button>
+            </div>
+            
+            <div class="checkboxes">
+                <label><input type="checkbox" id="cbHanTu"> Hán tự</label>
+                <label><input type="checkbox" id="cbCachDung"> Cách dùng</label>
+                <label><input type="checkbox" id="cbViDu"> Ví Dụ</label>
+                <label><input type="checkbox" id="cbMoRong"> Mở rộng</label>
+                <label><input type="checkbox" id="cbNguPhap"> Ngữ pháp</label>
+                <label><input type="checkbox" id="cbLoi"> Lỗi</label>
+                <label><input type="checkbox" id="cbThamKhao"> Tham khảo</label>
+                <label><input type="checkbox" id="cbNangCao"> Nâng cao</label>
+            </div>
+        </div>
+        <br />
+        @errorTableHTML
+    `;
         const cardKey = encodeURIComponent(raw);
         const FAILED_WORDS_KEY = "failedWords";
 
@@ -173,49 +219,16 @@
             `;
         }
 
-        container.innerHTML = `
-        <div>
-
-            <div class="${levelClass}">
-                ${level} - ${getFailedWordsString()}
-            </div>
-
-            <div>🔥 Streak: ${streak}</div>
-
-            <div>📊 Tiến bộ:</div>
-            <canvas id="chartCanvas" height="80"></canvas>
-
-            <div>${trendText}</div>
-
-            <div>
-                🔥 Độ khó:
-                <div>${diffBar} ${difficulty.toFixed(0)}%</div>
-                <div style="font-size: 0.95em; margin-top: 4px;">${difficultyInfo}</div>
-            </div>
-
-            <div>${stability}</div>
-
-        </div>
-        <div style="margin-top:10px;">
-            <div class="buttons">
-                <button id="copyBtn">📋 Copy</button>
-                <button id="copyErr">❌ Lỗi</button>
-            </div>
-            
-            <div class="checkboxes">
-                <label><input type="checkbox" id="cbHanTu"> Hán tự</label>
-                <label><input type="checkbox" id="cbCachDung"> Cách dùng</label>
-                <label><input type="checkbox" id="cbViDu"> Ví Dụ</label>
-                <label><input type="checkbox" id="cbMoRong"> Mở rộng</label>
-                <label><input type="checkbox" id="cbNguPhap"> Ngữ pháp</label>
-                <label><input type="checkbox" id="cbLoi"> Lỗi</label>
-                <label><input type="checkbox" id="cbThamKhao"> Tham khảo</label>
-                <label><input type="checkbox" id="cbNangCao"> Nâng cao</label>
-            </div>
-        </div>
-        <br />
-        ${errorTableHTML}
-    `;
+        container.innerHTML = htmlContent.replace("@levelClass", levelClass)
+            .replace("@level", level)
+            .replace("@getFailedWordsString()", getFailedWordsString())
+            .replace("@streak", streak)
+            .replace("@trendText", trendText)
+            .replace("@diffBar", diffBar)
+            .replace("@difficulty.toFixed(0)", difficulty.toFixed(0))
+            .replace("@difficultyInfo", difficultyInfo)
+            .replace("@stability", stability)
+            .replace("@errorTableHTML", errorTableHTML);
 
         // 🔥 COPY CONTENT
         setTimeout(() => {
@@ -369,6 +382,31 @@
                     // reset text button sau 1.5s
                     btn.innerText = "❌ Lỗi";
                 }, 1500);
+            };
+        }, 0);
+
+        setTimeout(() => {
+            const btn = document.getElementById("deleteBtn");
+
+            if (!btn) {
+                return;
+            }
+
+            btn.onclick = () => {
+                localStorage.removeItem("cardStats");
+                localStorage.removeItem(FAILED_WORDS_KEY);
+                drawChart();
+
+                container.innerHTML = htmlContent.replace("@levelClass", levelClass)
+                    .replace("@level", level)
+                    .replace("@getFailedWordsString()", getFailedWordsString())
+                    .replace("@streak", streak)
+                    .replace("@trendText", trendText)
+                    .replace("@diffBar", diffBar)
+                    .replace("@difficulty.toFixed(0)", difficulty.toFixed(0))
+                    .replace("@difficultyInfo", difficultyInfo)
+                    .replace("@stability", stability)
+                    .replace("@errorTableHTML", errorTableHTML);
             };
         }, 0);
 
