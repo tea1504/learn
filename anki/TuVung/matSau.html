@@ -252,14 +252,14 @@
             // tạo từng row lỗi
             const errorRows = messageErrors.map((err, i) => `
                 <tr>
-                    <td style="border: 1px solid #ddd; text-align: center;" rowspan="2">${i + 1}</td>
-                    <td style="border: 1px solid #ddd; padding-right: 10px; text-align: right; background-color: #f0f0f0; width: 60px;">Đáp án</td>
+                    <td style="border: 1px solid #ddd; text-align: center;" rowspan="3">${i + 1}</td>
                     <td style="border: 1px solid #ddd; padding-left: 10px; text-align: left;">${err.err1}</td>
-                    <td style="border: 1px solid #ddd; padding-left: 10px; text-align: left;" rowspan="2">${err.hint}</td>
                 </tr>
                 <tr>
-                    <td style="border: 1px solid #ddd; padding-right: 10px; text-align: right; background-color: #f0f0f0;">Nhập</td>
                     <td style="border: 1px solid #ddd; padding-left: 10px; text-align: left;">${err.err2}</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding-left: 10px; text-align: left;">${err.hint}</td>
                 </tr>
             `).join('');
             // tạo bảng lỗi hoàn chỉnh
@@ -271,7 +271,6 @@
                             <tr>
                                 <th style="border: 1px solid #ddd; background-color: #f0f0f0; text-align: center; width: 30px;">STT</th>
                                 <th style="border: 1px solid #ddd; background-color: #f0f0f0;" colspan="2">Chi tiết lỗi</th>
-                                <th style="border: 1px solid #ddd; background-color: #f0f0f0;">Gợi ý</th>
                             </tr>
                         </thead>
                         <tbody>
