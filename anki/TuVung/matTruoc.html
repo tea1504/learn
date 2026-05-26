@@ -111,7 +111,7 @@
          */
         function isCorrect(input) {
 
-            const parts = input.split(";")
+            const parts = input.split(/[;。]/)
                 .map(x => x.trim())
                 .filter(Boolean);
 
@@ -521,7 +521,7 @@
             // hiển thị đáp án
             hint.innerHTML = `
                 <div class="answer-hint">
-                    💡 ${answers.map(a => a.roma).join("; ")}
+                    💡 ${raw}
                 </div>
             `;
             // đánh dấu đã show đáp án để lần sau sẽ show luôn
