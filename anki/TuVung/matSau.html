@@ -6,7 +6,7 @@
     <div id="analytics"></div>
 
     <div class="buttons">
-        <button id="deleteBtn">Xoá localStorage</button>
+        <button id="deleteBtnErr">Xoá localStorage</button>
     </div>
     <div class="checkboxes">
         <label><input type="checkbox" id="cbDateMode"> Date Mode</label>
@@ -155,10 +155,6 @@
         }
         recent = valuesAttempts;
         messageErrors = stats[cardKey].messageError || [];
-        log("attempts", JSON.stringify(attempts));
-        log("attemptsModeDate", JSON.stringify(attemptsModeDate));
-        log("valuesAttempts", valuesAttempts);
-        log("messageErrors", JSON.stringify(messageErrors));
 
         var avg = 0.0;
         avg = valuesAttempts.reduce((a, b) => a + b, 0) / valuesAttempts.length;
