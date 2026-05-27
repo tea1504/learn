@@ -5,6 +5,13 @@
 
     <div id="analytics"></div>
 
+    <div class="buttons">
+        <button id="deleteBtnErr">Xoá localStorage</button>
+    </div>
+    <div class="checkboxes">
+        <label><input type="checkbox" id="cbDateMode"> Date Mode</label>
+    </div>
+    <div id="logBox"></div>
 </div>
 
 <style>
@@ -12,11 +19,35 @@
     .checkboxes {
         display: flex;
     }
+
+    #logBox {
+        width: 100%;
+        height: 200px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        overflow-y: auto;
+        background: #111;
+        color: #0f0;
+        font-family: monospace;
+        text-align: left;
+        font-size: 12px;
+    }
 </style>
 
 <script>
     (function () {
+        const logBox = document.getElementById("logBox");
 
+        function log(...message) {
+            var time = "";
+            message.forEach(line => {
+                time = new Date().toLocaleTimeString();
+                logBox.innerHTML += `[${time}] ${line}<br>`;
+                logBox.scrollTop = logBox.scrollHeight;
+            });
+        }
+
+        log("Script loaded");
         /* =========================
            🛡️ SAFE DATA
         ========================= */
@@ -25,6 +56,7 @@
 
         const cardKey = encodeURIComponent(raw);
         const FAILED_WORDS_KEY = "failedWords";
+        const DATEMODE = "dateMode";
 
         function getFailedWords() {
             try {
@@ -47,14 +79,43 @@
             return;
         }
 
-        const attempts = stats[cardKey].attempts;
-        // nếu chưa có attempt nào → chưa có dữ liệu
-        const messageErrors = stats[cardKey].messageError || [];
-        const recent = attempts;
+        var attempts = { "": 0 };
+        attempts = {};
+        var valuesAttempts = [0];
+        valuesAttempts = [];
+        var messageErrors = [""];
+        messageErrors = [];
+        var attemptsModeDate = { "": 0 }
+        attemptsModeDate = {};
+        var recent = [0];
+        recent = [];
 
-        const avg = attempts.reduce((a, b) => a + b, 0) / attempts.length;
-        const last = tinhTrungBinh(attempts, 0);
-        const prev = tinhTrungBinh(attempts, 1);
+        attempts = stats[cardKey].attempts;
+        Object.entries(attempts).forEach(([time, value]) => {
+            var date = new Date(time);
+            var dateKey = "";
+            dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+            attemptsModeDate[dateKey] = (attemptsModeDate[dateKey] || 0) + value;
+        });
+
+        if (localStorage.getItem(DATEMODE) === "true") {
+            log("Date mode is ON");
+            valuesAttempts = Object.values(attemptsModeDate);
+        } else {
+            valuesAttempts = Object.values(attempts);
+            log("Date mode is OFF");
+        }
+
+        log(JSON.stringify(attempts));
+        log(JSON.stringify(attemptsModeDate));
+        log(JSON.stringify(valuesAttempts));
+        
+        recent = valuesAttempts;
+        messageErrors = stats[cardKey].messageError || [];
+
+        const avg = valuesAttempts.reduce((a, b) => a + b, 0) / valuesAttempts.length;
+        const last = tinhTrungBinh(valuesAttempts, 0);
+        const prev = tinhTrungBinh(valuesAttempts, 1);
 
         /* =========================
            📉 TREND (so với lần trước)
@@ -537,6 +598,19 @@
                 localStorage.setItem("cbNangCao", event.target.checked);
             });
 
+        }, 0);
+
+        setTimeout(() => {
+            const btn = document.getElementById("deleteBtn");
+
+            if (!btn) {
+                return;
+            }
+
+            btn.onclick = () => {
+                localStorage.removeItem(CARDSTATUS);
+                localStorage.removeItem(FAILED_WORDS_KEY);
+            };
         }, 0);
 
         stats[cardKey].messageError = [];

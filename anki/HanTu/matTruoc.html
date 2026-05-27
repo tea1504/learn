@@ -18,26 +18,55 @@
             <button id="submitBtn">Submit</button>
             <button id="showBtn">Gợi ý</button>
         </div>
+        <div class="checkboxes">
+            <label><input type="checkbox" id="cbDateMode"> Date Mode</label>
+        </div>
     </div>
-    </div>
-
+    <div id="logBox"></div>
 </div>
 
 <style>
     .buttons {
         display: flex;
     }
+
+    #logBox {
+        width: 100%;
+        height: 200px;
+        border: 1px solid #ccc;
+        padding: 10px;
+        overflow-y: auto;
+        background: #111;
+        color: #0f0;
+        font-family: monospace;
+        text-align: left;
+        font-size: 12px;
+    }
 </style>
 
 <script>
     (function () {
+        const logBox = document.getElementById("logBox");
+
+        function log(...message) {
+            var time = "";
+            message.forEach(line => {
+                time = new Date().toLocaleTimeString();
+                logBox.innerHTML += `[${time}] ${line}<br>`;
+                logBox.scrollTop = logBox.scrollHeight;
+            });
+        }
 
         // số lần sai để hiển thị đáp án
+        const MAX_ATTEMPTS_PER_CARD = 20;
         const SHOW_ANSWER_THRESHOLD = 10;
+        const DATEMODE = "dateMode";
         // lấy raw string từ mặt trước, thay vì {{Mặt trước}} đã được Anki xử lý
         const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
         // nếu raw rỗng thì không cần xử lý gì cả
         if (!raw) return;
+        var time = new Date().toISOString();
+        // time = randomDate(new Date("2026-05-20"), new Date("2026-05-26"));
         // mã hóa raw để dùng làm key lưu stats
         const cardKey = encodeURIComponent(raw);
         // số lần sai liên tiếp
@@ -291,7 +320,7 @@
          * - lưu số lần sai vào attempts nếu không có lỗi (để biết độ khó của card)
          * - lưu lỗi vào messageError nếu có lỗi (để cải thiện gợi ý)
          */
-        function saveStats(value, err = "") {
+        function saveStats(value = 0, err1 = "", err2 = "", hint = "") {
             // lấy dữ liệu cũ
             let stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
 
@@ -299,16 +328,23 @@
             if (!stats[cardKey]) {
                 // attempts: mảng lưu số lần sai của mỗi lần học
                 // messageError: mảng lưu lỗi sai
-                stats[cardKey] = { attempts: [], messageError: [] };
+                stats[cardKey] = { attempts: {}, messageError: [] };
             }
 
             // lưu dữ liệu mới
             // nếu có lỗi thì lưu vào messageError, ngược lại lưu số lần sai vào attempts
-            if (err) {
-                stats[cardKey].messageError.push(err);
+            if (err1 || err2) {
+                stats[cardKey].messageError.push({ err1, err2, hint });
             }
             else {
-                stats[cardKey].attempts.push(value);
+                stats[cardKey].attempts[time] = (stats[cardKey].attempts[time] || 0) + value;
+                if (Object.keys(stats[cardKey].attempts).length > MAX_ATTEMPTS_PER_CARD) {
+                    const sortedAttempts = Object.entries(stats[cardKey].attempts)
+                        .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+                        .slice(0, MAX_ATTEMPTS_PER_CARD);
+                    stats[cardKey].attempts = Object.fromEntries(sortedAttempts);
+                }
+                log("saveStats:347 << attempt at " + time + ": " + JSON.stringify(stats[cardKey].attempts));
             }
 
             localStorage.setItem("cardStats", JSON.stringify(stats));
@@ -344,7 +380,7 @@
 
                 // chỉ lưu nếu sai hoặc lần đầu (để có dữ liệu cải thiện)
                 if (fail > 0 || isFirst) {
-                    saveStats(fail, "");
+                    saveStats(fail, "", "", "");
                 }
 
                 // reset
@@ -374,9 +410,9 @@
                  * - tính tổng lỗi để đánh giá mức độ sai của input của user
                  */
                 answers.forEach(ansObj => {
-                    
+
                     let ans = ansObj.roma;
-                    
+
                     if (containsKanji(userInput)) {
                         ans = ansObj.kanji;
                     }
@@ -431,12 +467,12 @@
                 input.select();
 
                 // lưu lỗi vào messageError để cải thiện gợi ý sau này
-                saveStats(fail, `Đáp án là ${answers.map(a => a.roma).join("; ")}, nhưng tôi nhập là ${userInput}. Sau khi tôi nhập thì gợi ý là ${html.replace(/<span class="correct">/g, "").replace(/<\/span>/g, "").replace(/<span class="missing">/g, "")}`);
+                saveStats(fail, answers.map(a => a.roma).join("; "), userInput, html.replace(/<span class="correct">/g, "").replace(/<\/span>/g, "").replace(/<span class="missing">/g, ""));
             }
 
             if (isShowingAnswer) {
                 // lưu lỗi vào messageError để cải thiện gợi ý sau này
-                saveStats(fail, `Tôi đã quên từ này hãy giúp tôi nhớ`);
+                saveStats(fail, `Tôi đã quên từ này hãy giúp tôi nhớ`, "", "");
                 // reset lại trạng thái đã show đáp án để lần sau sẽ không show nữa
                 isShowingAnswer = false;
             }
@@ -502,6 +538,24 @@
 
         // focus vào input khi mở card và chọn toàn bộ nội dung để người dùng có thể nhập ngay
         setTimeout(() => { input.focus(); input.select(); }, 100);
+        setTimeout(() => {
+            const cbHanTu = document.getElementById('cbDateMode');
+
+            cbHanTu.checked = localStorage.getItem(DATEMODE) === "true";
+
+            cbHanTu.addEventListener('change', (event) => {
+                localStorage.setItem(DATEMODE, event.target.checked);
+            });
+
+        }, 0);
 
     })();
+
+    function randomDate(start, end) {
+        return new Date(
+            start.getTime() +
+            Math.random() *
+            (end.getTime() - start.getTime())
+        );
+    }
 </script>
