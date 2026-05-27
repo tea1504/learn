@@ -61,6 +61,7 @@
         const MAX_ATTEMPTS_PER_CARD = 20;
         const SHOW_ANSWER_THRESHOLD = 10;
         const DATEMODE = "dateMode";
+        const GOOD = "good";
         // lấy raw string từ mặt trước, thay vì {{Mặt trước}} đã được Anki xử lý
         const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
         // nếu raw rỗng thì không cần xử lý gì cả
@@ -344,7 +345,6 @@
                         .slice(0, MAX_ATTEMPTS_PER_CARD);
                     stats[cardKey].attempts = Object.fromEntries(sortedAttempts);
                 }
-                log("saveStats:347 << attempt at " + time + ": " + JSON.stringify(stats[cardKey].attempts));
             }
 
             localStorage.setItem("cardStats", JSON.stringify(stats));
@@ -381,6 +381,12 @@
                 // chỉ lưu nếu sai hoặc lần đầu (để có dữ liệu cải thiện)
                 if (fail > 0 || isFirst) {
                     saveStats(fail, "", "", "");
+                    localStorage.setItem(GOOD, false);
+                }
+
+                if (fail === 0 && isFirst) {
+                    // nếu đã pass thì xóa khỏi danh sách từ đang fail
+                    localStorage.setItem(GOOD, true);
                 }
 
                 // reset

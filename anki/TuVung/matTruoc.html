@@ -309,6 +309,7 @@
         const MAX_ATTEMPTS_PER_CARD = 20;
         const FAILED_WORDS_KEY = "failedWords";
         const CARDSTATUS = "cardStats";
+        const GOOD = "good";
 
         function getFailedWords() {
             try {
@@ -354,14 +355,12 @@
         }
 
         function saveStats(value, err1 = "", err2 = "", hint = "") {
-            log("saveStats", value, err1, err2, hint);
             let stats = JSON.parse(localStorage.getItem(CARDSTATUS) || "{}");
 
             // nếu chưa có dữ liệu cho card này thì khởi tạo
             if (!stats[cardKey]) {
                 stats[cardKey] = { attempts: {}, messageError: [] };
             }
-            log("before save", JSON.stringify(stats[cardKey]));
 
             // lưu dữ liệu mới
             // nếu có lỗi thì lưu vào messageError, ngược lại lưu số lần sai vào attempts
@@ -406,11 +405,13 @@
 
                 // chỉ lưu nếu sai hoặc lần đầu (để có dữ liệu cải thiện)
                 if (fail > 0 || isFirst) {
+                    localStorage.setItem(GOOD, false);
                     saveStats(fail, "", "");
                 }
 
                 if (fail === 0 && isFirst) {
                     // nếu đã pass thì xóa khỏi danh sách từ đang fail
+                    localStorage.setItem(GOOD, true);
                     removeFailedWord(raw);
                 }
 

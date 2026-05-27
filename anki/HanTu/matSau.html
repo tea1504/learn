@@ -4,14 +4,14 @@
     <div class="answer">{{Mặt sau}}</div>
 
     <div id="analytics"></div>
-
-    <div class="buttons">
-        <button id="deleteBtnErr">Xoá localStorage</button>
-    </div>
     <div class="checkboxes">
         <label><input type="checkbox" id="cbDateMode"> Date Mode</label>
     </div>
     <div id="logBox"></div>
+
+    <div class="buttons">
+        <button id="deleteBtnErr">Xoá localStorage</button>
+    </div>
 </div>
 
 <style>
@@ -57,6 +57,9 @@
         const cardKey = encodeURIComponent(raw);
         const FAILED_WORDS_KEY = "failedWords";
         const DATEMODE = "dateMode";
+        const GOOD = "good";
+
+        const isGood = localStorage.getItem(GOOD) === "true";
 
         function getFailedWords() {
             try {
@@ -180,9 +183,7 @@
         let level = "";
         let levelClass = "";
 
-        const hasFail = last > 0;
-
-        if (hasFail) {
+        if (!isGood) {
             level = "❌ Học lại";
             levelClass = "bad";
         } else {
