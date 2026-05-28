@@ -35,29 +35,34 @@
 </style>
 
 <script>
+    var attempts = { "": 0 };
+    var valuesAttempts = [0];
+    var messageErrors = [""];
+    var attemptsModeDate = { "": 0 }
+    var recent = [0];
+    var diffBar = "";
+    var level = "";
+    var levelClass = "";
+
     (function () {
-        const logBox = document.getElementById("logBox");
+        try {
+            attempts = {};
+            messageErrors = [];
+            attemptsModeDate = {};
+            recent = [];
+            valuesAttempts = [];
 
-        function log(...message) {
-            var time = "";
-            message.forEach(line => {
-                time = new Date().toLocaleTimeString();
-                logBox.innerHTML += `[${time}] ${line}<br>`;
-                logBox.scrollTop = logBox.scrollHeight;
-            });
-        }
+            XuatLog("Bat dau render analytics...");
+            /* =========================
+               🛡️ SAFE DATA
+            ========================= */
+            var raw = `{{Mặt trước}}`.replace(/\n/g, " ");
+            if (!raw) {
+                XuatLog("Raw data is empty");
+                return;
+            }
 
-        log("Bat dau render analytics...");
-        /* =========================
-           🛡️ SAFE DATA
-        ========================= */
-        var raw = `{{Mặt trước}}`.replace(/\n/g, " ");
-        if (!raw) {
-            log("Raw data is empty");
-            return;
-        }
-
-        const htmlContent = `
+            const htmlContent = `
         <div>
 
             <div class="@levelClass">
@@ -73,7 +78,7 @@
 
             <div>
                 🔥 Độ khó:
-                <div>@diffBar @difficulty.toFixed(0)%</div>
+                <div>@diffBar @difficulty%</div>
                 <div style="font-size: 0.95em; margin-top: 4px;">@difficultyInfo</div>
             </div>
 
@@ -100,174 +105,142 @@
         <br />
         @errorTableHTML
     `;
-        const cardKey = encodeURIComponent(raw);
-        const FAILED_WORDS_KEY = "failedWords";
-        const CARDSTATUS = "cardStats";
-        const DATEMODE = "dateMode";
-        const GOOD = "good";
+            const cardKey = encodeURIComponent(raw);
+            const FAILED_WORDS_KEY = "failedWords";
+            const CARDSTATUS = "cardStats";
+            const DATEMODE = "dateMode";
+            const GOOD = "good";
 
-        const isGood = localStorage.getItem(GOOD) === "true";
+            const isGood = localStorage.getItem(GOOD) === "true";
 
-        function getFailedWords() {
-            try {
-                return JSON.parse(localStorage.getItem(FAILED_WORDS_KEY) || "[]");
-            } catch (e) {
-                return [];
+            function getFailedWords() {
+                try {
+                    return JSON.parse(localStorage.getItem(FAILED_WORDS_KEY) || "[]");
+                } catch (e) {
+                    return [];
+                }
             }
-        }
 
-        function getFailedWordsString() {
-            return getFailedWords().join(",");
-        }
+            function getFailedWordsString() {
+                return getFailedWords().join(",");
+            }
 
-        const stats = JSON.parse(localStorage.getItem(CARDSTATUS) || "{}");
-        const container = document.getElementById("analytics");
-        const card = document.querySelector(".card-container");
+            const stats = JSON.parse(localStorage.getItem(CARDSTATUS) || "{}");
+            const container = document.getElementById("analytics");
+            const card = document.querySelector(".card-container");
 
-        if (!stats[cardKey] || !stats[cardKey].attempts) {
-            container.innerHTML = "<div class='empty'>Chưa có dữ liệu</div>";
-            return;
-        }
+            if (!stats[cardKey] || !stats[cardKey].attempts) {
+                container.innerHTML = "<div class='empty'>Chưa có dữ liệu</div>";
+                return;
+            }
 
-        var attempts = { "": 0 };
-        attempts = {};
-        var valuesAttempts = [0];
-        valuesAttempts = [];
-        var messageErrors = [""];
-        messageErrors = [];
-        var attemptsModeDate = { "": 0 }
-        attemptsModeDate = {};
-        var recent = [0];
-        recent = [];
+            attempts = stats[cardKey].attempts;
+            Object.entries(attempts).forEach(([time, value]) => {
+                var date = new Date(time);
+                var dateKey = "";
+                dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
+                attemptsModeDate[dateKey] = (attemptsModeDate[dateKey] || 0) + value;
+            });
 
-        attempts = stats[cardKey].attempts;
-        Object.entries(attempts).forEach(([time, value]) => {
-            var date = new Date(time);
-            var dateKey = "";
-            dateKey = `${date.getFullYear()}-${date.getMonth() + 1}-${date.getDate()}`;
-            log("attempt at " + dateKey + ": " + value);
-            attemptsModeDate[dateKey] = (attemptsModeDate[dateKey] || 0) + value;
-        });
+            if (localStorage.getItem(DATEMODE) === "true") {
+                XuatLog("Date mode is ON");
+                valuesAttempts = Object.values(attemptsModeDate);
+            } else {
+                valuesAttempts = Object.values(attempts);
+                XuatLog("Date mode is OFF");
+            }
+            recent = valuesAttempts;
+            messageErrors = stats[cardKey].messageError || [];
 
-        if (localStorage.getItem(DATEMODE) === "true") {
-            log("Date mode is ON");
-            valuesAttempts = Object.values(attemptsModeDate);
-        } else {
-            valuesAttempts = Object.values(attempts);
-            log("Date mode is OFF");
-        }
-        recent = valuesAttempts;
-        messageErrors = stats[cardKey].messageError || [];
+            var avg = 0.0;
+            avg = valuesAttempts.reduce((a, b) => a + b, 0) / valuesAttempts.length;
+            const last = tinhTrungBinh(valuesAttempts, 0);
+            const prev = tinhTrungBinh(valuesAttempts, 1);
 
-        var avg = 0.0;
-        avg = valuesAttempts.reduce((a, b) => a + b, 0) / valuesAttempts.length;
-        const last = tinhTrungBinh(valuesAttempts, 0);
-        const prev = tinhTrungBinh(valuesAttempts, 1);
+            /* =========================
+               📉 TREND (so với lần trước)
+            ========================= */
+            let trendText = "➡️ Ổn định";
+            if (prev !== undefined) {
+                if (last < prev) trendText = "📉 Đang cải thiện";
+                else if (last > prev) trendText = "📈 Đang tệ hơn";
+            }
 
-        /* =========================
-           📉 TREND (so với lần trước)
-        ========================= */
-        let trendText = "➡️ Ổn định";
-        if (prev !== undefined) {
-            if (last < prev) trendText = "📉 Đang cải thiện";
-            else if (last > prev) trendText = "📈 Đang tệ hơn";
-        }
+            /* =========================
+               🔥 DIFFICULTY
+            ========================= */
+            const maxFail = 10;
+            const difficulty = Math.min(100, (avg / maxFail) * 100);
+            const currentDifficulty = Math.min(100, (last / maxFail) * 100);
+            const prevDifficulty = prev !== undefined ? Math.min(100, (prev / maxFail) * 100) : null;
+            const difficultyChange = prevDifficulty !== null ? currentDifficulty - prevDifficulty : null;
+            const difficultyChangeText = difficultyChange === null
+                ? ""
+                : difficultyChange === 0
+                    ? "➡️ Không đổi"
+                    : difficultyChange > 0
+                        ? `📈 Tăng ${difficultyChange.toFixed(0)}%`
+                        : `📉 Giảm ${Math.abs(difficultyChange).toFixed(0)}%`;
+            const difficultyInfo = prevDifficulty !== null
+                ? `Độ khó lần này: ${currentDifficulty.toFixed(0)}% · Lần trước: ${prevDifficulty.toFixed(0)}% (${difficultyChangeText})`
+                : `Độ khó lần này: ${currentDifficulty.toFixed(0)}%`;
 
-        /* =========================
-           🔥 DIFFICULTY
-        ========================= */
-        const maxFail = 10;
-        const difficulty = Math.min(100, (avg / maxFail) * 100);
-        const currentDifficulty = Math.min(100, (last / maxFail) * 100);
-        const prevDifficulty = prev !== undefined ? Math.min(100, (prev / maxFail) * 100) : null;
-        const difficultyChange = prevDifficulty !== null ? currentDifficulty - prevDifficulty : null;
-        const difficultyChangeText = difficultyChange === null
-            ? ""
-            : difficultyChange === 0
-                ? "➡️ Không đổi"
-                : difficultyChange > 0
-                    ? `📈 Tăng ${difficultyChange.toFixed(0)}%`
-                    : `📉 Giảm ${Math.abs(difficultyChange).toFixed(0)}%`;
-        const difficultyInfo = prevDifficulty !== null
-            ? `Độ khó lần này: ${currentDifficulty.toFixed(0)}% · Lần trước: ${prevDifficulty.toFixed(0)}% (${difficultyChangeText})`
-            : `Độ khó lần này: ${currentDifficulty.toFixed(0)}%`;
+            diffBar = RenderBar(difficulty);
 
-        function renderBar(percent) {
-            const total = 20;
-            const filled = Math.round((percent / 100) * total);
-            return "█".repeat(filled) + "░".repeat(total - filled);
-        }
+            /* =========================
+               🧠 VARIANCE (sample)
+            ========================= */
+            const mean = avg;
+            const variance = valuesAttempts.length > 1
+                ? valuesAttempts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (valuesAttempts.length - 1)
+                : 0;
 
-        const diffBar = renderBar(difficulty);
+            let stability = variance > 2 ? "⚠️ Không ổn định" : "🧠 Ổn định";
 
-        /* =========================
-           🧠 VARIANCE (sample)
-        ========================= */
-        const mean = avg;
-        const variance = valuesAttempts.length > 1
-            ? valuesAttempts.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / (valuesAttempts.length - 1)
-            : 0;
+            /* =========================
+               🔥 STREAK
+            ========================= */
+            let streak = 0;
+            for (let i = valuesAttempts.length - 1; i >= 0; i--) {
+                if (valuesAttempts[i] === 0) streak++;
+                else break;
+            }
 
-        let stability = variance > 2 ? "⚠️ Không ổn định" : "🧠 Ổn định";
+            if (!isGood) {
+                level = "❌ Học lại";
+                levelClass = "bad";
+            } else {
+                level = "✅ Tốt";
+                levelClass = "good";
+            }
 
-        /* =========================
-           🔥 STREAK
-        ========================= */
-        let streak = 0;
-        for (let i = valuesAttempts.length - 1; i >= 0; i--) {
-            if (valuesAttempts[i] === 0) streak++;
-            else break;
-        }
+            // 🔥 apply cho toàn bộ màn hình
+            card.classList.remove("good", "bad");
+            card.classList.add(levelClass);
 
-        /* =========================
-           🏷️ LEVEL (2 trạng thái)
-           - có sai → học lại
-           - không sai → tốt
-        ========================= */
-        let level = "";
-        let levelClass = "";
-
-        if (!isGood) {
-            level = "❌ Học lại";
-            levelClass = "bad";
-        } else {
-            level = "✅ Tốt";
-            levelClass = "good";
-        }
-
-        // 🔥 apply cho toàn bộ màn hình
-        card.classList.remove("good", "bad");
-        card.classList.add(levelClass);
-
-        /* =========================
-           🎯 UI
-        ========================= */
-        // Build error table HTML
-        let errorTableHTML = '';
-        // nếu có lỗi → hiển thị bảng lỗi chi tiết để người học dễ dàng nhận biết và cải thiện
-        if (messageErrors.length > 0) {
-            // tạo từng row lỗi
-            const errorRows = messageErrors.map((err, i) => `
-                <tr>
-                    <td style="border: 1px solid #ddd; text-align: center;" rowspan="3">${i + 1}</td>
-                    <td style="border: 1px solid #ddd; padding-left: 10px; text-align: left;">${err.err1}</td>
-                </tr>
-                <tr>
-                    <td style="border: 1px solid #ddd; padding-left: 10px; text-align: left;">${err.err2}</td>
-                </tr>
-                <tr>
-                    <td style="border: 1px solid #ddd; padding-left: 10px; text-align: left;">${err.hint}</td>
+            /* =========================
+               🎯 UI
+            ========================= */
+            // Build error table HTML
+            let errorTableHTML = '';
+            // nếu có lỗi → hiển thị bảng lỗi chi tiết để người học dễ dàng nhận biết và cải thiện
+            if (messageErrors.length > 0) {
+                // tạo từng row lỗi
+                const errorRows = messageErrors.map((err, i) => `
+                <tr id="errorRow${i}" style="border: 1px solid #ddd;">
+                    <td style="border: 1px solid #ddd; text-align: center;"><input type="checkbox" id="errorCheck${i}" onclick="checkAgree('errorCheck${i}')"></td>
+                    <td style="border: 1px solid #ddd; padding-left: 10px; text-align: left;">${hienLoiVoiStyle(err.err1, err.err2)}</td>
                 </tr>
             `).join('');
-            // tạo bảng lỗi hoàn chỉnh
-            errorTableHTML = `
+                // tạo bảng lỗi hoàn chỉnh
+                errorTableHTML = `
                 <div style="margin-top: 15px;">
                     <div style="font-weight: bold; margin-bottom: 8px;">📋 Danh sách lỗi (${messageErrors.length}):</div>
                     <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
                         <thead>
                             <tr>
                                 <th style="border: 1px solid #ddd; background-color: #f0f0f0; text-align: center; width: 30px;">STT</th>
-                                <th style="border: 1px solid #ddd; background-color: #f0f0f0;" colspan="2">Chi tiết lỗi</th>
+                                <th style="border: 1px solid #ddd; padding-left: 10px; text-align: left;">${messageErrors[0].err1}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -276,401 +249,656 @@
                     </table>
                 </div>
             `;
-        }
+            }
 
-        container.innerHTML = htmlContent.replace("@levelClass", levelClass)
-            .replace("@level", level)
-            .replace("@getFailedWordsString()", getFailedWordsString())
-            .replace("@streak", streak)
-            .replace("@trendText", trendText)
-            .replace("@diffBar", diffBar)
-            .replace("@difficulty.toFixed(0)", difficulty.toFixed(0))
-            .replace("@difficultyInfo", difficultyInfo)
-            .replace("@stability", stability)
-            .replace("@errorTableHTML", errorTableHTML);
+            container.innerHTML = htmlContent.replace("@levelClass", levelClass)
+                .replace("@level", level)
+                .replace("@getFailedWordsString()", getFailedWordsString())
+                .replace("@streak", streak)
+                .replace("@trendText", trendText)
+                .replace("@diffBar", diffBar)
+                .replace("@difficulty.toFixed(0)", difficulty.toFixed(0))
+                .replace("@difficultyInfo", difficultyInfo)
+                .replace("@stability", stability)
+                .replace("@errorTableHTML", errorTableHTML);
 
-        // 🔥 COPY CONTENT
-        setTimeout(() => {
-            const btn = document.getElementById("copyBtn");
-            if (!btn) return;
+            // 🔥 COPY CONTENT
+            setTimeout(() => {
+                const btn = document.getElementById("copyBtn");
+                if (!btn) return;
 
-            btn.onclick = async () => {
-                const front = document.querySelectorAll(".answer")[0]?.innerText || "";
-                const back = document.querySelectorAll(".answer")[1]?.innerText || "";
+                btn.onclick = async () => {
+                    const front = document.querySelectorAll(".answer")[0]?.innerText || "";
+                    const back = document.querySelectorAll(".answer")[1]?.innerText || "";
 
-                let index = 2;
+                    let index = 2;
 
-                let text = `Bạn là chuyên gia ngôn ngữ Nhật Bản và giảng viên từ vựng nâng cao. \n`;
-                text += `Dữ liệu đầu vào:\n`;
-                text += `${front}\n${back}\n`;
-                text += `Số lần đã học: ${attempts.length}\n`;
+                    let text = `Bạn là chuyên gia ngôn ngữ Nhật Bản và giảng viên từ vựng nâng cao. \n`;
+                    text += `Dữ liệu đầu vào:\n`;
+                    text += `${front}\n${back}\n`;
+                    text += `Số lần đã học: ${attempts.length}\n`;
 
-                text += `0. Thông tin lịch sử học:\n`;
-                text += `- Độ khó tự đánh giá là ${difficulty.toFixed(0)}%\n`;
-                text += `- ${difficultyInfo}%\n`;
-                text += `- Xu hướng ${trendText}\n`;
-                text += `- Nghĩa Nhật - Việt + Nhật - Nhật\n`;
-                text += `- Loại từ\n`;
+                    text += `0. Thông tin lịch sử học:\n`;
+                    text += `- Độ khó tự đánh giá là ${difficulty.toFixed(0)}%\n`;
+                    text += `- ${difficultyInfo}%\n`;
+                    text += `- Xu hướng ${trendText}\n`;
+                    text += `- Nghĩa Nhật - Việt + Nhật - Nhật\n`;
+                    text += `- Loại từ\n`;
 
-                text += `1. Thông tin cơ bản:\n`;
-                text += `- Từ gốc (kanji/kana)\n`;
-                text += `- Furigana đầy đủ\n`;
-                text += `- Nghĩa Nhật - Việt + Nhật - Nhật\n`;
-                text += `- Loại từ\n`;
+                    text += `1. Thông tin cơ bản:\n`;
+                    text += `- Từ gốc (kanji/kana)\n`;
+                    text += `- Furigana đầy đủ\n`;
+                    text += `- Nghĩa Nhật - Việt + Nhật - Nhật\n`;
+                    text += `- Loại từ\n`;
 
-                if (cbHanTu.checked) {
-                    text += `${index++}. Phân tích Kanji (nếu có):\n`;
-                    text += `- Từng chữ Hán cấu thành\n`;
-                    text += `- Âm On/Kun\n- Ý nghĩa từng chữ\n`;
-                    text += `- Phân loại theo Lục thư (象形, 指事, 会意, 形声...)\n`;
-                    text += `- Gợi ý cách ghi nhớ (mnemonic)\n`;
-                }
+                    if (cbHanTu.checked) {
+                        text += `${index++}. Phân tích Kanji (nếu có):\n`;
+                        text += `- Từng chữ Hán cấu thành\n`;
+                        text += `- Âm On/Kun\n- Ý nghĩa từng chữ\n`;
+                        text += `- Phân loại theo Lục thư (象形, 指事, 会意, 形声...)\n`;
+                        text += `- Gợi ý cách ghi nhớ (mnemonic)\n`;
+                    }
 
-                if (cbCachDung.checked) {
-                    text += `${index++}. Cách dùng:\n`;
-                    text += `- Trong giao tiếp hằng ngày (kèm ví dụ hội thoại)\n`;
-                    text += `- Trong văn viết trang trọng\n`;
-                    text += `- Trong lĩnh vực CNTT (nếu có)\n`;
-                    text += `- Sắc thái (formal/informal, nuance)\n`;
-                }
+                    if (cbCachDung.checked) {
+                        text += `${index++}. Cách dùng:\n`;
+                        text += `- Trong giao tiếp hằng ngày (kèm ví dụ hội thoại)\n`;
+                        text += `- Trong văn viết trang trọng\n`;
+                        text += `- Trong lĩnh vực CNTT (nếu có)\n`;
+                        text += `- Sắc thái (formal/informal, nuance)\n`;
+                    }
 
-                if (cbViDu.checked) {
-                    text += `${index++}. Ví dụ:\n`;
-                    text += `- Ít nhất 5 câu ví dụ (có furigana(cuối câu) + dịch, dựa trên chủ đề {{Deck}} và các từ vựng đã học phía trước (${getFailedWordsString()}), có mô tả bối cảnh)\n`;
-                    text += `- 1 đoạn hội thoại ngắn\n`;
-                }
+                    if (cbViDu.checked) {
+                        text += `${index++}. Ví dụ:\n`;
+                        text += `- Ít nhất 5 câu ví dụ (có furigana(cuối câu) + dịch, dựa trên chủ đề {{Deck}} và các từ vựng đã học phía trước (${getFailedWordsString()}), có mô tả bối cảnh)\n`;
+                        text += `- 1 đoạn hội thoại ngắn\n`;
+                    }
 
-                if (cbMoRong.checked) {
-                    text += `${index++}. Mở rộng:\n`;
-                    text += `- Từ đồng nghĩa (kèm so sánh nuance)\n`;
-                    text += `- Từ trái nghĩa\n`;
-                    text += `- Collocations phổ biến\n`;
-                    text += `- Thành ngữ / biểu hiện liên quan (nếu có)\n`;
-                }
+                    if (cbMoRong.checked) {
+                        text += `${index++}. Mở rộng:\n`;
+                        text += `- Từ đồng nghĩa (kèm so sánh nuance)\n`;
+                        text += `- Từ trái nghĩa\n`;
+                        text += `- Collocations phổ biến\n`;
+                        text += `- Thành ngữ / biểu hiện liên quan (nếu có)\n`;
+                    }
 
-                if (cbNguPhap.checked) {
-                    text += `${index++}. Ngữ pháp liên quan:\n`;
-                    text += `- Các mẫu ngữ pháp thường đi kèm\n`;
-                }
+                    if (cbNguPhap.checked) {
+                        text += `${index++}. Ngữ pháp liên quan:\n`;
+                        text += `- Các mẫu ngữ pháp thường đi kèm\n`;
+                    }
 
-                if (cbLoi.checked) {
-                    text += `${index++}. Lỗi thường gặp:\n`;
-                    text += `- Những lỗi người học hay mắc\n`;
-                }
+                    if (cbLoi.checked) {
+                        text += `${index++}. Lỗi thường gặp:\n`;
+                        text += `- Những lỗi người học hay mắc\n`;
+                    }
 
-                if (cbThamKhao.checked) {
-                    text += `${index++}. Tài nguyên tham khảo:\n`;
-                    text += `- Cung cấp link từ nguồn đáng tin cậy (từ điển, website học tiếng Nhật)\n`;
-                }
+                    if (cbThamKhao.checked) {
+                        text += `${index++}. Tài nguyên tham khảo:\n`;
+                        text += `- Cung cấp link từ nguồn đáng tin cậy (từ điển, website học tiếng Nhật)\n`;
+                    }
 
-                if (cbNangCao.checked) {
-                    text += `${index++}. Insight nâng cao:\n`;
-                    text += `- Phân tích dành cho người học trình độ trung - cao cấp\n`;
-                }
+                    if (cbNangCao.checked) {
+                        text += `${index++}. Insight nâng cao:\n`;
+                        text += `- Phân tích dành cho người học trình độ trung - cao cấp\n`;
+                    }
 
-                text += `${index++}. Yêu cầu bổ sung:\n`;
-                text += `- Trả lời ngắn ngọn đúng trọng tâm câu hỏi. Không trả thêm, không lang mang \n`;
-                //text += `- Trình bày bằng tiếng Việt\n`;
-                //text += `- Format rõ ràng (heading + bullet points)\n`;
-                //text += `- Không bỏ sót mục nào\n`;
-                //text += `- Nếu dữ liệu ${front} và ${back} mâu thuẫn → phân tích và giải thích\n`;
-                //text += `- Nếu thiếu thông tin → ghi rõ "Không áp dụng"`;
+                    text += `${index++}. Yêu cầu bổ sung:\n`;
+                    text += `- Trả lời ngắn ngọn đúng trọng tâm câu hỏi. Không trả thêm, không lang mang \n`;
+                    //text += `- Trình bày bằng tiếng Việt\n`;
+                    //text += `- Format rõ ràng (heading + bullet points)\n`;
+                    //text += `- Không bỏ sót mục nào\n`;
+                    //text += `- Nếu dữ liệu ${front} và ${back} mâu thuẫn → phân tích và giải thích\n`;
+                    //text += `- Nếu thiếu thông tin → ghi rõ "Không áp dụng"`;
 
-                try {
-                    await navigator.clipboard.writeText(text);
-                    btn.innerText = "✅ Đã copy";
-                } catch (e) {
-                    // fallback cho Anki (quan trọng)
-                    navigator.clipboard.writeText(text)
+                    try {
+                        await navigator.clipboard.writeText(text);
+                        btn.innerText = "✅ Đã copy";
+                    } catch (e) {
+                        // fallback cho Anki (quan trọng)
+                        navigator.clipboard.writeText(text)
 
-                    btn.innerText = "✅ Đã copy";
-                }
+                        btn.innerText = "✅ Đã copy";
+                    }
 
-                setTimeout(() => {
-                    btn.innerText = "📋 Copy";
-                }, 1500);
-            };
-        }, 0);
-
-        // 🔥 COPY LỖI (dành cho người học cải thiện)
-        setTimeout(() => {
-            // hàm lưu stats (cải thiện dần theo thời gian, quan trọng để cải thiện gợi ý)
-            const btn = document.getElementById("copyErr");
-            // nếu không có button → không cần thiết phải crash, chỉ cần dừng ở đây là được
-            if (!btn) return;
-
-            // khi click sẽ copy lỗi gần nhất + tất cả lỗi vào clipboard để người học dễ dàng gửi cho thầy cô hoặc tự phân tích cải thiện
-            btn.onclick = async () => {
-                if (messageErrors.length === 0) {
-                    // nếu chưa có lỗi nào → không cần copy, chỉ cần thông báo
-                    btn.innerText = "✅ Chưa có lỗi";
                     setTimeout(() => {
+                        btn.innerText = "📋 Copy";
+                    }, 1500);
+                };
+            }, 0);
+
+            // 🔥 COPY LỖI (dành cho người học cải thiện)
+            setTimeout(() => {
+                // hàm lưu stats (cải thiện dần theo thời gian, quan trọng để cải thiện gợi ý)
+                const btn = document.getElementById("copyErr");
+                // nếu không có button → không cần thiết phải crash, chỉ cần dừng ở đây là được
+                if (!btn) return;
+
+                // khi click sẽ copy lỗi gần nhất + tất cả lỗi vào clipboard để người học dễ dàng gửi cho thầy cô hoặc tự phân tích cải thiện
+                btn.onclick = async () => {
+                    if (messageErrors.length === 0) {
+                        // nếu chưa có lỗi nào → không cần copy, chỉ cần thông báo
+                        btn.innerText = "✅ Chưa có lỗi";
+                        setTimeout(() => {
+                            btn.innerText = "❌ Lỗi";
+                        }, 1500);
+                        return;
+                    }
+
+                    // khởi tạo text để copy
+                    let text = `Sau khi học từ {{Mặt trước}}({{Mặt sau}}), tôi đã mắc lỗi ${messageErrors.length} lần:\n\n`;
+
+                    // cộng dồn tất cả lỗi vào text
+                    messageErrors.forEach((err, i) => {
+                        text += `Lỗi ${i + 1}: ${err.err2}\n`;
+                    });
+
+                    // đặt câu hỏi
+                    text += `Hãy cho tôi biết tôi mắc lỗi gì trong quá trình học từ này và cách cải thiện.\n`;
+                    text += `(Lưu ý:\n1. Thứ tự đáp án tôi nhập có thể không theo thứ tự gợi ý.\n`;
+                    text += `2. khi nhập 1 chuỗi liên tiếp như aiueo, sasisuseso là tôi đang tìm gợi ý từ hệ thống (đây xem như là lỗi quên bài).\n`;
+                    text += `3. Các lỗi liên quan tới đánh máy là có thể xảy ra lỗi này không cần phân tích, nhưng cũng có thể là do sai thật chứ không phải đánh máy.\n`;
+                    text += `4. Đánh giá ngắn gọn trong 1-2 đoạn thôi nhé)`;
+
+                    try {
+                        // copy vào clipboard
+                        await navigator.clipboard.writeText(text);
+                        // thông báo đã copy
+                        btn.innerText = "✅ Đã copy";
+                    } catch (e) {
+                        // fallback cho Anki (quan trọng)
+                        navigator.clipboard.writeText(text)
+                        // thông báo đã copy
+                        btn.innerText = "✅ Đã copy";
+                    }
+
+                    setTimeout(() => {
+                        // reset text button sau 1.5s
                         btn.innerText = "❌ Lỗi";
                     }, 1500);
+                };
+            }, 0);
+
+            setTimeout(() => {
+                const btn = document.getElementById("deleteBtn");
+
+                if (!btn) {
                     return;
                 }
 
-                // khởi tạo text để copy
-                let text = `Sau khi học từ {{Mặt trước}}({{Mặt sau}}), tôi đã mắc lỗi ${messageErrors.length} lần:\n\n`;
+                btn.onclick = () => {
+                    localStorage.removeItem(CARDSTATUS);
+                    localStorage.removeItem(FAILED_WORDS_KEY);
+                    drawChart();
 
-                // cộng dồn tất cả lỗi vào text
-                messageErrors.forEach((err, i) => {
-                    text += `Lỗi ${i + 1}: ${err.err2}\n`;
+                    container.innerHTML = htmlContent.replace("@levelClass", levelClass)
+                        .replace("@level", level)
+                        .replace("@getFailedWordsString()", getFailedWordsString())
+                        .replace("@streak", streak)
+                        .replace("@trendText", trendText)
+                        .replace("@diffBar", diffBar)
+                        .replace("@difficulty.toFixed(0)", difficulty.toFixed(0))
+                        .replace("@difficultyInfo", difficultyInfo)
+                        .replace("@stability", stability)
+                        .replace("@errorTableHTML", errorTableHTML);
+                };
+            }, 0);
+
+            /* =========================
+               🎨 DRAW CHART (fix blur + width)
+            ========================= */
+            function drawChart() {
+                const canvas = document.getElementById("chartCanvas");
+                if (!canvas) return;
+
+                const ctx = canvas.getContext("2d");
+
+                // 🔥 FIX 1: fallback width (quan trọng nhất)
+                let width = canvas.parentElement.offsetWidth;
+
+                if (!width || width === 0) {
+                    width = 300; // fallback tránh crash
+                }
+
+                const height = 80;
+
+                // 🔥 FIX 2: retina scale chuẩn
+                const ratio = window.devicePixelRatio || 1;
+
+                canvas.width = width * ratio;
+                canvas.height = height * ratio;
+                canvas.style.width = width + "px";
+                canvas.style.height = height + "px";
+
+                ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+                ctx.clearRect(0, 0, width, height);
+
+                // 🔥 FIX 3: nếu chỉ có 1 điểm → vẫn vẽ
+                if (recent.length === 1) {
+                    const x = width / 2;
+                    const y = height - (recent[0] / 5) * height;
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = "#3b82f6";
+                    ctx.fill();
+
+                    return;
+                }
+
+                if (recent.length < 1) return;
+
+                const max = Math.max(...recent, 5);
+                const stepX = width / (recent.length - 1);
+
+                const color = last < avg ? "#22c55e" : "#ef4444";
+
+                // Duong Giong
+                // LINE
+                ctx.beginPath();
+                ctx.lineWidth = 1;
+                ctx.strokeStyle = color + "33";
+
+                const khoanCachMax = max;
+                const khoanCach = height / khoanCachMax;
+
+                for (let i = 0; i < khoanCachMax; i++) {
+                    ctx.moveTo(0, i * khoanCach);
+                    ctx.lineTo(width, i * khoanCach);
+                }
+
+                ctx.stroke();
+
+                // LINE
+                ctx.beginPath();
+                ctx.lineWidth = 2;
+                ctx.strokeStyle = color;
+
+                recent.forEach((v, i) => {
+                    const x = i * stepX;
+                    const y = height - (v / max) * height;
+
+                    if (i === 0) ctx.moveTo(x, y);
+                    else ctx.lineTo(x, y);
                 });
 
-                // đặt câu hỏi
-                text += `Hãy cho tôi biết tôi mắc lỗi gì trong quá trình học từ này và cách cải thiện.\n`;
-                text += `(Lưu ý:\n1. Thứ tự đáp án tôi nhập có thể không theo thứ tự gợi ý.\n`;
-                text += `2. khi nhập 1 chuỗi liên tiếp như aiueo, sasisuseso là tôi đang tìm gợi ý từ hệ thống (đây xem như là lỗi quên bài).\n`;
-                text += `3. Các lỗi liên quan tới đánh máy là có thể xảy ra lỗi này không cần phân tích, nhưng cũng có thể là do sai thật chứ không phải đánh máy.\n`;
-                text += `4. Đánh giá ngắn gọn trong 1-2 đoạn thôi nhé)`;
+                ctx.stroke();
 
-                try {
-                    // copy vào clipboard
-                    await navigator.clipboard.writeText(text);
-                    // thông báo đã copy
-                    btn.innerText = "✅ Đã copy";
-                } catch (e) {
-                    // fallback cho Anki (quan trọng)
-                    navigator.clipboard.writeText(text)
-                    // thông báo đã copy
-                    btn.innerText = "✅ Đã copy";
-                }
-
-                setTimeout(() => {
-                    // reset text button sau 1.5s
-                    btn.innerText = "❌ Lỗi";
-                }, 1500);
-            };
-        }, 0);
-
-        setTimeout(() => {
-            const btn = document.getElementById("deleteBtn");
-
-            if (!btn) {
-                return;
-            }
-
-            btn.onclick = () => {
-                localStorage.removeItem(CARDSTATUS);
-                localStorage.removeItem(FAILED_WORDS_KEY);
-                drawChart();
-
-                container.innerHTML = htmlContent.replace("@levelClass", levelClass)
-                    .replace("@level", level)
-                    .replace("@getFailedWordsString()", getFailedWordsString())
-                    .replace("@streak", streak)
-                    .replace("@trendText", trendText)
-                    .replace("@diffBar", diffBar)
-                    .replace("@difficulty.toFixed(0)", difficulty.toFixed(0))
-                    .replace("@difficultyInfo", difficultyInfo)
-                    .replace("@stability", stability)
-                    .replace("@errorTableHTML", errorTableHTML);
-            };
-        }, 0);
-
-        /* =========================
-           🎨 DRAW CHART (fix blur + width)
-        ========================= */
-        function drawChart() {
-            const canvas = document.getElementById("chartCanvas");
-            if (!canvas) return;
-
-            const ctx = canvas.getContext("2d");
-
-            // 🔥 FIX 1: fallback width (quan trọng nhất)
-            let width = canvas.parentElement.offsetWidth;
-
-            if (!width || width === 0) {
-                width = 300; // fallback tránh crash
-            }
-
-            const height = 80;
-
-            // 🔥 FIX 2: retina scale chuẩn
-            const ratio = window.devicePixelRatio || 1;
-
-            canvas.width = width * ratio;
-            canvas.height = height * ratio;
-            canvas.style.width = width + "px";
-            canvas.style.height = height + "px";
-
-            ctx.setTransform(ratio, 0, 0, ratio, 0, 0);
-
-            ctx.clearRect(0, 0, width, height);
-
-            // 🔥 FIX 3: nếu chỉ có 1 điểm → vẫn vẽ
-            if (recent.length === 1) {
-                const x = width / 2;
-                const y = height - (recent[0] / 5) * height;
-
-                ctx.beginPath();
-                ctx.arc(x, y, 4, 0, Math.PI * 2);
-                ctx.fillStyle = "#3b82f6";
+                // FILL
+                ctx.lineTo(width, height);
+                ctx.lineTo(0, height);
+                ctx.closePath();
+                ctx.fillStyle = color + "22";
                 ctx.fill();
 
-                return;
+                // POINTS
+                recent.forEach((v, i) => {
+                    let x = i * stepX;
+                    let y = height - (v / max) * height;
+
+                    ctx.beginPath();
+                    ctx.arc(x, y, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = color;
+                    ctx.fill();
+                    ctx.font = "15px sans-serif";
+                    ctx.fillStyle = "#000";
+                    if (y === 0) {
+                        y += 10;
+                    }
+                    if (x === width) {
+                        x -= 15;
+                    }
+                    ctx.fillText(v, x, y);
+                });
             }
 
-            if (recent.length < 1) return;
+            // đảm bảo DOM render xong
+            requestAnimationFrame(() => {
+                requestAnimationFrame(drawChart);
+            });
 
-            const max = Math.max(...recent, 5);
-            const stepX = width / (recent.length - 1);
+            setTimeout(() => {
+                const cbHanTu = document.getElementById('cbHanTu');
+                const cbCachDung = document.getElementById('cbCachDung');
+                const cbViDu = document.getElementById('cbViDu');
+                const cbMoRong = document.getElementById('cbMoRong');
+                const cbNguPhap = document.getElementById('cbNguPhap');
+                const cbLoi = document.getElementById('cbLoi');
+                const cbThamKhao = document.getElementById('cbThamKhao');
+                const cbNangCao = document.getElementById('cbNangCao');
+                const cbDateMode = document.getElementById('cbDateMode');
 
-            const color = last < avg ? "#22c55e" : "#ef4444";
+                cbHanTu.checked = localStorage.getItem("cbHanTu") === "true";
+                cbCachDung.checked = localStorage.getItem("cbCachDung") === "true";
+                cbViDu.checked = localStorage.getItem("cbViDu") === "true";
+                cbMoRong.checked = localStorage.getItem("cbMoRong") === "true";
+                cbNguPhap.checked = localStorage.getItem("cbNguPhap") === "true";
+                cbLoi.checked = localStorage.getItem("cbLoi") === "true";
+                cbThamKhao.checked = localStorage.getItem("cbThamKhao") === "true";
+                cbNangCao.checked = localStorage.getItem("cbNangCao") === "true";
+                cbDateMode.checked = localStorage.getItem(DATEMODE) === "true";
 
-            // Duong Giong
-            // LINE
-            ctx.beginPath();
-            ctx.lineWidth = 1;
-            ctx.strokeStyle = color + "33";
+                cbHanTu.addEventListener('change', (event) => {
+                    localStorage.setItem("cbHanTu", event.target.checked);
+                });
 
-            const khoanCachMax = max;
-            const khoanCach = height / khoanCachMax;
+                cbCachDung.addEventListener('change', (event) => {
+                    localStorage.setItem("cbCachDung", event.target.checked);
+                });
 
-            for (let i = 0; i < khoanCachMax; i++) {
-                ctx.moveTo(0, i * khoanCach);
-                ctx.lineTo(width, i * khoanCach);
+                cbViDu.addEventListener('change', (event) => {
+                    localStorage.setItem("cbViDu", event.target.checked);
+                });
+
+                cbMoRong.addEventListener('change', (event) => {
+                    localStorage.setItem("cbMoRong", event.target.checked);
+                });
+
+                cbNguPhap.addEventListener('change', (event) => {
+                    localStorage.setItem("cbNguPhap", event.target.checked);
+                });
+
+                cbLoi.addEventListener('change', (event) => {
+                    localStorage.setItem("cbLoi", event.target.checked);
+                });
+
+                cbThamKhao.addEventListener('change', (event) => {
+                    localStorage.setItem("cbThamKhao", event.target.checked);
+                });
+
+                cbNangCao.addEventListener('change', (event) => {
+                    localStorage.setItem("cbNangCao", event.target.checked);
+                });
+
+                cbDateMode.addEventListener('change', (event) => {
+                    localStorage.setItem(DATEMODE, event.target.checked);
+                });
+            }, 0);
+
+            if (isGood && false) {
+                stats[cardKey].messageError = [];
             }
-
-            ctx.stroke();
-
-            // LINE
-            ctx.beginPath();
-            ctx.lineWidth = 2;
-            ctx.strokeStyle = color;
-
-            recent.forEach((v, i) => {
-                const x = i * stepX;
-                const y = height - (v / max) * height;
-
-                if (i === 0) ctx.moveTo(x, y);
-                else ctx.lineTo(x, y);
-            });
-
-            ctx.stroke();
-
-            // FILL
-            ctx.lineTo(width, height);
-            ctx.lineTo(0, height);
-            ctx.closePath();
-            ctx.fillStyle = color + "22";
-            ctx.fill();
-
-            // POINTS
-            recent.forEach((v, i) => {
-                let x = i * stepX;
-                let y = height - (v / max) * height;
-
-                ctx.beginPath();
-                ctx.arc(x, y, 3, 0, Math.PI * 2);
-                ctx.fillStyle = color;
-                ctx.fill();
-                ctx.font = "15px sans-serif";
-                ctx.fillStyle = "#000";
-                if (y === 0) {
-                    y += 10;
-                }
-                if (x === width) {
-                    x -= 15;
-                }
-                ctx.fillText(v, x, y);
-            });
+            localStorage.setItem("cardStats", JSON.stringify(stats));
         }
-
-        // đảm bảo DOM render xong
-        requestAnimationFrame(() => {
-            requestAnimationFrame(drawChart);
-        });
-
-        setTimeout(() => {
-            const cbHanTu = document.getElementById('cbHanTu');
-            const cbCachDung = document.getElementById('cbCachDung');
-            const cbViDu = document.getElementById('cbViDu');
-            const cbMoRong = document.getElementById('cbMoRong');
-            const cbNguPhap = document.getElementById('cbNguPhap');
-            const cbLoi = document.getElementById('cbLoi');
-            const cbThamKhao = document.getElementById('cbThamKhao');
-            const cbNangCao = document.getElementById('cbNangCao');
-            const cbDateMode = document.getElementById('cbDateMode');
-
-            cbHanTu.checked = localStorage.getItem("cbHanTu") === "true";
-            cbCachDung.checked = localStorage.getItem("cbCachDung") === "true";
-            cbViDu.checked = localStorage.getItem("cbViDu") === "true";
-            cbMoRong.checked = localStorage.getItem("cbMoRong") === "true";
-            cbNguPhap.checked = localStorage.getItem("cbNguPhap") === "true";
-            cbLoi.checked = localStorage.getItem("cbLoi") === "true";
-            cbThamKhao.checked = localStorage.getItem("cbThamKhao") === "true";
-            cbNangCao.checked = localStorage.getItem("cbNangCao") === "true";
-            cbDateMode.checked = localStorage.getItem(DATEMODE) === "true";
-
-            cbHanTu.addEventListener('change', (event) => {
-                localStorage.setItem("cbHanTu", event.target.checked);
-            });
-
-            cbCachDung.addEventListener('change', (event) => {
-                localStorage.setItem("cbCachDung", event.target.checked);
-            });
-
-            cbViDu.addEventListener('change', (event) => {
-                localStorage.setItem("cbViDu", event.target.checked);
-            });
-
-            cbMoRong.addEventListener('change', (event) => {
-                localStorage.setItem("cbMoRong", event.target.checked);
-            });
-
-            cbNguPhap.addEventListener('change', (event) => {
-                localStorage.setItem("cbNguPhap", event.target.checked);
-            });
-
-            cbLoi.addEventListener('change', (event) => {
-                localStorage.setItem("cbLoi", event.target.checked);
-            });
-
-            cbThamKhao.addEventListener('change', (event) => {
-                localStorage.setItem("cbThamKhao", event.target.checked);
-            });
-
-            cbNangCao.addEventListener('change', (event) => {
-                localStorage.setItem("cbNangCao", event.target.checked);
-            });
-
-            cbDateMode.addEventListener('change', (event) => {
-                localStorage.setItem(DATEMODE, event.target.checked);
-            });
-        }, 0);
-
-        stats[cardKey].messageError = [];
-        localStorage.setItem("cardStats", JSON.stringify(stats));
-
+        catch (e) {
+            XuatLog("Error in analytics script: " + e.message);
+        }
     })();
 
-    function tinhTrungBinh(arrKetQua = [], intKhoanCach = 0) {
-        if (!arrKetQua || arrKetQua.length === 0) {
-            return 0;
-        }
+    function hienLoiVoiStyle(dapAn = "", loi = "") {
+        try {
+            var chuoiHTML = "";
+            for (let viTri = 0; viTri < Math.max(dapAn.length, loi.length); viTri++) {
+                if (viTri >= loi.length) {
+                    break;
+                }
 
-        if (arrKetQua[arrKetQua.length - 1] === 0) {
-            return 0;
-        }
+                if (viTri >= dapAn.length) {
+                    chuoiHTML += `<span style="background: #fee2e2; color: #991b1b;">${loi.charAt(viTri)}</span>`
+                    continue;
+                }
 
-        if (arrKetQua.length - intKhoanCach === 0) {
-            return 0;
-        }
-
-        let index = 0;
-
-        for (let i = 0; i < arrKetQua.length - intKhoanCach; i++) {
-            if (arrKetQua[i] > 0) {
-                index = i;
+                if (dapAn.charAt(viTri) === loi.charAt(viTri)) {
+                    chuoiHTML += `<span style="background: #dcfce7; color: #166534;">${loi.charAt(viTri)}</span>`
+                }
+                else {
+                    chuoiHTML += `<span style="background: #fee2e2; color: #991b1b;">${loi.charAt(viTri)}</span>`
+                }
             }
-        }
 
-        const arrKetQuaTheoIndex = arrKetQua.slice(0, index + 1);
-        if (arrKetQuaTheoIndex.length === 0) {
-            return 0;
+            return chuoiHTML;
         }
-        return arrKetQuaTheoIndex.reduce((a, b) => a + b, 0) / arrKetQuaTheoIndex.length;
+        catch (e) {
+            XuatLog("Error in tinhTrungBinh: " + e.message);
+            throw e;
+        }
+    }
+
+    function tinhTrungBinh(arrKetQua = [], intKhoanCach = 0) {
+        try {
+            if (!arrKetQua || arrKetQua.length === 0) {
+                return 0;
+            }
+
+            if (arrKetQua[arrKetQua.length - 1] === 0) {
+                return 0;
+            }
+
+            if (arrKetQua.length - intKhoanCach === 0) {
+                return 0;
+            }
+
+            let index = 0;
+
+            for (let i = 0; i < arrKetQua.length - intKhoanCach; i++) {
+                if (arrKetQua[i] > 0) {
+                    index = i;
+                }
+            }
+
+            const arrKetQuaTheoIndex = arrKetQua.slice(0, index + 1);
+            if (arrKetQuaTheoIndex.length === 0) {
+                return 0;
+            }
+            return arrKetQuaTheoIndex.reduce((a, b) => a + b, 0) / arrKetQuaTheoIndex.length;
+        }
+        catch (e) {
+            XuatLog("Error in tinhTrungBinh: " + e.message);
+            throw e;
+        }
+    }
+
+    function checkAgree(checkboxId = "") {
+        try {
+            const checkbox = document.getElementById(checkboxId);
+            const stats = JSON.parse(localStorage.getItem(CARDSTATUS) || "{}");
+            const cardKey = encodeURIComponent(raw);
+            const maxKey = Object.keys(stats[cardKey].attempts).reduce((a, b) => a > b ? a : b);
+            var value = LayAttempts(maxKey) || 0;
+            XuatLog(`Checkbox ${checkboxId} is now ${checkbox.checked ? "checked" : "unchecked"}. Current attempts for ${maxKey}: ${value}`);
+            if (checkbox.checked) {
+                value = Math.max(0, value - 1);
+            }
+            else {
+                value = value + 1;
+            }
+            GanAttempts(maxKey, value);
+            diffBar = RenderBar(Math.random() * 100);
+            VeGiaoDienAnalytics();
+            XuatLogAttempts();
+        }
+        catch (e) {
+            XuatLog("Error in checkAgree: " + e.message);
+            throw e;
+        }
+    }
+
+    function XuatLogAttempts() {
+        try {
+            var attempts = LayStats().attempts || { "": 0 };
+
+            Object.entries(attempts).forEach(([time, value]) => {
+                XuatLog(`Attempt at ${time}: ${value}`);
+            });
+        }
+        catch (e) {
+            XuatLog("Error in logAttempts: " + e.message);
+            throw e;
+        }
+    }
+
+    function LayStats() {
+        try {
+            const stats = JSON.parse(localStorage.getItem(CARDSTATUS) || "{}");
+            const cardKey = encodeURIComponent(raw);
+            return stats[cardKey] || { attempts: {}, messageError: [] };
+        }
+        catch (e) {
+            XuatLog("Error in layStats: " + e.message);
+            throw e;
+        }
+    }
+
+    function GanStats(attempts = {}, messageError = []) {
+        try {
+            const stats = JSON.parse(localStorage.getItem(CARDSTATUS) || "{}");
+            const cardKey = encodeURIComponent(raw);
+            stats[cardKey] = { attempts, messageError };
+            localStorage.setItem(CARDSTATUS, JSON.stringify(stats));
+        }
+        catch (e) {
+            XuatLog("Error in ganStats: " + e.message);
+            throw e;
+        }
+    }
+
+    function LayAttempts(khoa = "") {
+        try {
+            const stats = LayStats();
+            if (!stats.attempts) {
+                return 0;
+            }
+            return stats.attempts[khoa] || 0;
+        }
+        catch (e) {
+            XuatLog("Error in layAttempts: " + e.message);
+            throw e;
+        }
+    }
+
+    function GanAttempts(khoa = "", value = 0) {
+        try {
+            var stats = {};
+            var attempts = {};
+            var cardKey = encodeURIComponent(raw);
+
+            stats = LayStats();
+
+            if (!stats[cardKey]) {
+                stats[cardKey] = { attempts: {}, messageError: [] };
+            }
+
+            attempts = stats[cardKey].attempts;
+            attempts[khoa] = value;
+
+            GanStats(attempts, stats[cardKey].messageError);
+        }
+        catch (e) {
+            XuatLog("Error in GanAttempts: " + e.message);
+            throw e;
+        }
+    }
+
+    function XuatLog(...message) {
+        const logBox = document.getElementById("logBox");
+        var time = "";
+        message.forEach(line => {
+            time = new Date().toLocaleTimeString();
+            logBox.innerHTML += `[${time}] ${line}<br>`;
+            logBox.scrollTop = logBox.scrollHeight;
+        });
+    }
+
+    function RenderBar(percent = 0) {
+        try {
+            const total = 20;
+            const filled = Math.round((percent / 100) * total);
+            return "█".repeat(filled) + "░".repeat(total - filled);
+        }
+        catch (e) {
+            XuatLog("Error in RenderBar: " + e.message);
+            throw e;
+        }
+    }
+
+    function VeGiaoDienAnalytics() {
+        try {
+            const htmlContent = `
+        <div style="margin-top:10px;">
+            
+            <div class="checkboxes">
+                <label><input type="checkbox" id="cbHanTu"> Hán tự</label>
+                <label><input type="checkbox" id="cbCachDung"> Cách dùng</label>
+                <label><input type="checkbox" id="cbViDu"> Ví Dụ</label>
+                <label><input type="checkbox" id="cbMoRong"> Mở rộng</label>
+                <label><input type="checkbox" id="cbNguPhap"> Ngữ pháp</label>
+                <label><input type="checkbox" id="cbLoi"> Lỗi</label>
+                <label><input type="checkbox" id="cbThamKhao"> Tham khảo</label>
+                <label><input type="checkbox" id="cbNangCao"> Nâng cao</label>
+            </div>
+        </div>
+        <br />
+        @errorTableHTML
+    `;
+            var container = document.getElementById("analytics");
+
+            var div1 = document.createElement("div");
+            var div1_level = document.createElement("div");
+            div1_level.classList.add(levelClass);
+            div1_level.innerText = level;
+            div1.appendChild(div1_level);
+            var div1_streak = document.createElement("div");
+            div1_streak.innerText = `🔥 Streak: @streak`;
+            div1.appendChild(div1_streak);
+            var div1_TienBo = document.createElement("div");
+            div1_TienBo.innerText = "📊 Tiến bộ:";
+            div1.appendChild(div1_TienBo);
+            var div1_Chart = document.createElement("canvas");
+            div1_Chart.id = "chartCanvas";
+            div1_Chart.height = 80;
+            div1.appendChild(div1_Chart);
+            var div1_Trend = document.createElement("div");
+            div1_Trend.innerText = 'trendText';
+            div1.appendChild(div1_Trend);
+            var div1_Difficulty = document.createElement("div");
+            div1_Difficulty.innerText = `Độ khó: @difficulty.toFixed(0)%\n@difficultyInfo`;
+            div1.appendChild(div1_Difficulty);
+            var div1_Stability = document.createElement("div");
+            div1_Stability.innerText = '@stability';
+            div1.appendChild(div1_Stability);
+
+            var div2 = document.createElement("div");
+            div2.style.marginTop = "10px";
+            var div2_Buttons = document.createElement("div");
+            div2_Buttons.classList.add("buttons");
+            var copyBtn = document.createElement("button");
+            copyBtn.id = "copyBtn";
+            copyBtn.innerText = "📋 Copy";
+            div2_Buttons.appendChild(copyBtn);
+            var copyErrBtn = document.createElement("button");
+            copyErrBtn.id = "copyErr";
+            copyErrBtn.innerText = "❌ Lỗi";
+            div2_Buttons.appendChild(copyErrBtn);
+            div2.appendChild(div2_Buttons);
+            var div2_Checkboxes = document.createElement("div");
+            div2_Checkboxes.classList.add("checkboxes");
+            var div2_CheckboxIds = ["cbHanTu", "cbCachDung", "cbViDu", "cbMoRong", "cbNguPhap", "cbLoi", "cbThamKhao", "cbNangCao"];
+            var div2_CheckboxLabels = ["Hán tự", "Cách dùng", "Ví Dụ", "Mở rộng", "Ngữ pháp", "Lỗi", "Tham khảo", "Nâng cao"];
+            div2_CheckboxIds.forEach((id, index) => {
+                var label = document.createElement("label");
+                var checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.id = id;
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(" " + div2_CheckboxLabels[index]));
+                div2_Checkboxes.appendChild(label);
+            });
+            div2.appendChild(div2_Checkboxes);
+
+            var brTag = document.createElement("br");
+
+            var errorTableHTML = '';
+
+            container.innerHTML = "";
+            container.appendChild(div1);
+            container.appendChild(div2);
+            container.appendChild(brTag);
+
+
+            XuatLog(JSON.stringify(container.children));
+        }
+        catch (e) {
+            XuatLog("Error in VeGiaoDienAnalytics: " + e.message);
+            throw e;
+        }
     }
 </script>
