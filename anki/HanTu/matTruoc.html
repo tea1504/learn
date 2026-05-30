@@ -51,7 +51,6 @@
     var fail = 0;
     var isFirst = true;
     var isShowingAnswer = false;
-    var answers = parseAnswers(raw);
 
     function XuatLog(type = 0, ...message) {
         var logBox = document.getElementById("logBox");
@@ -151,6 +150,8 @@
             throw error;
         }
     });
+
+    var answers = parseAnswers(raw);
 
     var isCorrect = XuatLogHam(function isCorrect(input = "", answers = "") {
         try {
@@ -306,7 +307,12 @@
     var saveStats = XuatLogHam(function saveStats(value = 0, err1 = "", err2 = "", hint = "") {
         const MAX_ATTEMPTS_PER_CARD = 20;
         // lấy dữ liệu cũ
-        let stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+        let stats = {};
+        try {
+            stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+        } catch (error) {
+            XuatLog(2, "Error parsing cardStats from localStorage:" + error);
+        }
 
         // nếu chưa có dữ liệu cho card này thì khởi tạo
         if (!stats[cardKey]) {
