@@ -189,11 +189,165 @@
         }
     });
 
+    var generateMask = XuatLogHam(function generateMask(user, correct) {
+        try {
+            const u = Normalize(user); // vd: "ha"
+            const chars = new Set(u.split("")); // {h, a}
+
+            let result = "";
+
+            for (let ch of correct) {
+
+                // giữ khoảng trắng
+                if (ch === " ") {
+                    result += " ";
+                    continue;
+                }
+
+                // nếu ký tự nằm trong user input → hiện
+                if (chars.has(Normalize(ch))) {
+                    result += `<span class="correct">${ch}</span>`;
+                } else {
+                    result += `<span class="missing">_</span>`;
+                }
+            }
+
+            return result;
+        }
+        catch (error) {
+            XuatLog(2, "Error in generateMask:" + error);
+            throw error;
+        }
+    });
+
+    function isNoSpaceMatch(user, correct) {
+        try {
+            return Normalize(user) === Normalize(correct);
+        }
+        catch (error) {
+            XuatLog(2, "Error in isNoSpaceMatch:" + error);
+            throw error;
+        }
+    }
+
+    function splitUserByCorrect(user, correct) {
+        const u = Normalize(user);
+        const words = correct.trim().split(/\s+/);
+        let result = [];
+        let pointer = 0;
+
+        words.forEach(w => {
+            let chunk = "";
+            let i = 0;
+            while (pointer < u.length && i < w.length) {
+                chunk += u[pointer];
+                pointer++;
+                i++;
+            }
+            result.push(chunk);
+        });
+
+        if (pointer < u.length) {
+            result[result.length - 1] += u.slice(pointer);
+        }
+        return result;
+    }
+
+    function countErrors(user, correct) {
+        // nếu không có khoảng trắng nào → so sánh toàn bộ chuỗi
+        if (isNoSpaceMatch(user, correct)) return 0;
+        // nếu có khoảng trắng → tách input của user theo đáp án rồi so sánh từng phần
+        const uw = splitUserByCorrect(user, correct);
+        // tách đáp án đúng thành các từ riêng biệt
+        const cw = correct.trim().split(/\s+/);
+        // đếm tổng lỗi bằng cách tính lỗi của từng phần và cộng lại
+        let total = 0;
+        // duyệt qua từng phần của đáp án đúng và phần tương ứng của input của user để tính lỗi
+        cw.forEach((w, i) => {
+            // tính lỗi giữa phần của input của user và phần tương ứng của đáp án đúng rồi cộng vào tổng lỗi
+            total += countErrorsChar(uw[i] || "", w);
+        });
+        // trả về tổng lỗi
+        return total;
+    }
+
+    function countErrorsChar(user, correct) {
+        // chuẩn hóa chuỗi để so sánh
+        const u = Normalize(user);
+        // chuẩn hóa chuỗi để so sánh
+        const c = Normalize(correct);
+        // độ dài của chuỗi user
+        const m = u.length;
+        // độ dài của chuỗi correct
+        const n = c.length;
+        // tạo bảng dp để tính LCS
+        const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
+
+        /**
+         * Tính LCS bằng quy hoạch động
+         * - nếu ký tự giống nhau → tăng 1 so với LCS của 2 chuỗi trước đó
+         * - nếu khác nhau → lấy max của LCS khi bỏ đi ký tự cuối của 1 trong 2 chuỗi
+         */
+        for (let i = 1; i <= m; i++) {
+            for (let j = 1; j <= n; j++) {
+                if (u[i - 1] === c[j - 1]) {
+                    dp[i][j] = dp[i - 1][j - 1] + 1;
+                } else {
+                    dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
+                }
+            }
+        }
+        // độ dài của LCS
+        const lcs = dp[m][n];
+        // lỗi = tổng độ dài 2 chuỗi - 2 * LCS
+        return (m - lcs) + (n - lcs);
+    }
+
+    var saveStats = XuatLogHam(function saveStats(value = 0, err1 = "", err2 = "", hint = "") {
+        const MAX_ATTEMPTS_PER_CARD = 20;
+        // lấy dữ liệu cũ
+        let stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+
+        // nếu chưa có dữ liệu cho card này thì khởi tạo
+        if (!stats[cardKey]) {
+            // attempts: mảng lưu số lần sai của mỗi lần học
+            // messageError: mảng lưu lỗi sai
+            stats[cardKey] = { attempts: {}, messageError: [] };
+        }
+
+        // lưu dữ liệu mới
+        // nếu có lỗi thì lưu vào messageError, ngược lại lưu số lần sai vào attempts
+        if (err1 || err2) {
+            stats[cardKey].messageError.push({ err1, err2, hint });
+        }
+        else {
+            stats[cardKey].attempts[time] = (stats[cardKey].attempts[time] || 0) + value;
+            if (Object.keys(stats[cardKey].attempts).length > MAX_ATTEMPTS_PER_CARD) {
+                const sortedAttempts = Object.entries(stats[cardKey].attempts)
+                    .sort((a, b) => new Date(b[0]) - new Date(a[0]))
+                    .slice(0, MAX_ATTEMPTS_PER_CARD);
+                stats[cardKey].attempts = Object.fromEntries(sortedAttempts);
+            }
+        }
+
+        localStorage.setItem("cardStats", JSON.stringify(stats));
+    });
+    
+    function similarity(a, b) {
+        let match = 0;
+        const len = Math.min(a.length, b.length);
+
+        for (let i = 0; i < len; i++) {
+            if (a[i] === b[i]) match++;
+        }
+
+        return match;
+    }
+
     (function () {
         try {
             XuatLog(0, "Card loaded...");
             // số lần sai để hiển thị đáp án
-            const MAX_ATTEMPTS_PER_CARD = 20;
             const SHOW_ANSWER_THRESHOLD = 10;
             const DATEMODE = "dateMode";
             const GOOD = "good";
@@ -205,180 +359,6 @@
             time = TaoNgay(new Date("2026-05-20"), new Date("2026-05-26"));
             XuatLog(0, "Time for stats:" + JSON.stringify(time));
 
-            /**
-             * Tạo mask cho input của user dựa trên đáp án đúng
-             * - hiện các ký tự đã nhập đúng
-             * - hiện dấu gạch dưới cho các ký tự chưa nhập
-             */
-            function generateMask(user, correct) {
-
-                const u = Normalize(user); // vd: "ha"
-                const chars = new Set(u.split("")); // {h, a}
-
-                let result = "";
-
-                for (let ch of correct) {
-
-                    // giữ khoảng trắng
-                    if (ch === " ") {
-                        result += " ";
-                        continue;
-                    }
-
-                    // nếu ký tự nằm trong user input → hiện
-                    if (chars.has(Normalize(ch))) {
-                        result += `<span class="correct">${ch}</span>`;
-                    } else {
-                        result += `<span class="missing">_</span>`;
-                    }
-                }
-
-                return result;
-            }
-
-            /**
-             * Tách input của user thành các phần tương ứng với từng từ trong đáp án đúng
-             * - dựa trên độ dài của từng từ trong đáp án để tách input của user
-             * - phần dư (nếu có) sẽ được gán vào phần cuối cùng
-             */
-            function splitUserByCorrect(user, correct) {
-                // chuẩn hóa input của user để so sánh
-                const u = Normalize(user);
-                // tách đáp án đúng thành các từ riêng biệt
-                const words = correct.trim().split(/\s+/);
-                // pointer để theo dõi vị trí hiện tại trong input của user
-                let result = [];
-                // tách input của user theo độ dài của từng từ trong đáp án
-                let pointer = 0;
-
-                /**
-                 * Duyệt qua từng từ trong đáp án đúng để tách input của user
-                 * - với mỗi từ, lấy ra phần tương ứng trong input của user dựa trên độ dài của từ đó
-                 * - nếu input của user ngắn hơn tổng độ dài các từ đã duyệt thì phần còn lại sẽ được gán vào phần cuối cùng
-                 */
-                words.forEach(w => {
-                    // nếu đã hết input của user thì gán phần còn lại của đáp án vào phần cuối cùng
-                    let chunk = "";
-                    // lấy ra phần tương ứng trong input của user dựa trên độ dài của từ đó
-                    let i = 0;
-                    /**
-                     * 🔥 duyệt qua từng ký tự của từ trong đáp án đúng để tách input của user
-                     * - nếu input của user ngắn hơn tổng độ dài các từ đã duyệt thì phần còn lại sẽ được gán vào phần cuối cùng
-                     */
-                    while (pointer < u.length && i < w.length) {
-                        // nếu đã hết input của user thì gán phần còn lại của đáp án vào phần cuối cùng
-                        chunk += u[pointer];
-                        // tăng pointer và i để tiếp tục tách phần tiếp theo
-                        pointer++;
-                        // tăng i để tiếp tục tách phần tiếp theo
-                        i++;
-                    }
-                    // thêm phần đã tách vào kết quả
-                    result.push(chunk);
-                });
-
-                // 🔥 phần dư (không cắt nữa)
-                if (pointer < u.length) {
-                    // gán phần dư vào phần cuối cùng
-                    result[result.length - 1] += u.slice(pointer);
-                }
-                // trả về mảng các phần đã tách tương ứng với từng từ trong đáp án đúng
-                return result;
-            }
-
-            /**
-             * Đếm số lỗi giữa input của user và đáp án đúng
-             * - nếu không có khoảng trắng nào → so sánh toàn bộ chuỗi
-             * - nếu có khoảng trắng → tách input của user theo đáp án rồi so sánh từng phần
-             */
-            function countErrors(user, correct) {
-                // nếu không có khoảng trắng nào → so sánh toàn bộ chuỗi
-                if (isNoSpaceMatch(user, correct)) return 0;
-                // nếu có khoảng trắng → tách input của user theo đáp án rồi so sánh từng phần
-                const uw = splitUserByCorrect(user, correct);
-                // tách đáp án đúng thành các từ riêng biệt
-                const cw = correct.trim().split(/\s+/);
-                // đếm tổng lỗi bằng cách tính lỗi của từng phần và cộng lại
-                let total = 0;
-                // duyệt qua từng phần của đáp án đúng và phần tương ứng của input của user để tính lỗi
-                cw.forEach((w, i) => {
-                    // tính lỗi giữa phần của input của user và phần tương ứng của đáp án đúng rồi cộng vào tổng lỗi
-                    total += countErrorsChar(uw[i] || "", w);
-                });
-                // trả về tổng lỗi
-                return total;
-            }
-
-            /**
-             * Đếm số lỗi giữa 2 chuỗi bằng cách tính độ dài của longest common subsequence (LCS)
-             * - lỗi = tổng độ dài 2 chuỗi - 2 * LCS
-             */
-            function countErrorsChar(user, correct) {
-                // chuẩn hóa chuỗi để so sánh
-                const u = Normalize(user);
-                // chuẩn hóa chuỗi để so sánh
-                const c = Normalize(correct);
-                // độ dài của chuỗi user
-                const m = u.length;
-                // độ dài của chuỗi correct
-                const n = c.length;
-                // tạo bảng dp để tính LCS
-                const dp = Array.from({ length: m + 1 }, () => Array(n + 1).fill(0));
-
-                /**
-                 * Tính LCS bằng quy hoạch động
-                 * - nếu ký tự giống nhau → tăng 1 so với LCS của 2 chuỗi trước đó
-                 * - nếu khác nhau → lấy max của LCS khi bỏ đi ký tự cuối của 1 trong 2 chuỗi
-                 */
-                for (let i = 1; i <= m; i++) {
-                    for (let j = 1; j <= n; j++) {
-                        if (u[i - 1] === c[j - 1]) {
-                            dp[i][j] = dp[i - 1][j - 1] + 1;
-                        } else {
-                            dp[i][j] = Math.max(dp[i - 1][j], dp[i][j - 1]);
-                        }
-                    }
-                }
-                // độ dài của LCS
-                const lcs = dp[m][n];
-                // lỗi = tổng độ dài 2 chuỗi - 2 * LCS
-                return (m - lcs) + (n - lcs);
-            }
-
-            /**
-             * Lưu stats vào localStorage để cải thiện gợi ý sau này
-             * - lưu số lần sai vào attempts nếu không có lỗi (để biết độ khó của card)
-             * - lưu lỗi vào messageError nếu có lỗi (để cải thiện gợi ý)
-             */
-            function saveStats(value = 0, err1 = "", err2 = "", hint = "") {
-                // lấy dữ liệu cũ
-                let stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
-
-                // nếu chưa có dữ liệu cho card này thì khởi tạo
-                if (!stats[cardKey]) {
-                    // attempts: mảng lưu số lần sai của mỗi lần học
-                    // messageError: mảng lưu lỗi sai
-                    stats[cardKey] = { attempts: {}, messageError: [] };
-                }
-
-                // lưu dữ liệu mới
-                // nếu có lỗi thì lưu vào messageError, ngược lại lưu số lần sai vào attempts
-                if (err1 || err2) {
-                    stats[cardKey].messageError.push({ err1, err2, hint });
-                }
-                else {
-                    stats[cardKey].attempts[time] = (stats[cardKey].attempts[time] || 0) + value;
-                    if (Object.keys(stats[cardKey].attempts).length > MAX_ATTEMPTS_PER_CARD) {
-                        const sortedAttempts = Object.entries(stats[cardKey].attempts)
-                            .sort((a, b) => new Date(b[0]) - new Date(a[0]))
-                            .slice(0, MAX_ATTEMPTS_PER_CARD);
-                        stats[cardKey].attempts = Object.fromEntries(sortedAttempts);
-                    }
-                }
-
-                localStorage.setItem("cardStats", JSON.stringify(stats));
-            }
-
             // lấy element input, result, hint để thao tác
             const input = document.getElementById("myInput");
             // element hiển thị kết quả đúng/sai
@@ -386,14 +366,6 @@
             // element hiển thị gợi ý
             const hint = document.getElementById("hint");
 
-            /**
-             * Xử lý khi user nhấn submit
-             * - nếu input rỗng → cảnh báo và không xử lý tiếp
-             * - nếu đúng → hiện "PASS", reset số lần sai, ẩn gợi ý, focus vào nút submit
-             * - nếu sai → hiện "NOT PASS", tăng số lần sai, hiển thị gợi ý từng chữ, reset input và focus lại
-             * - nếu số lần sai >= threshold → hiển thị đáp án đầy đủ trong gợi ý
-             * - lưu stats vào localStorage để cải thiện gợi ý sau này
-             */
             function handle() {
                 const userInput = input.value;
 
@@ -513,28 +485,9 @@
                 }
             }
 
-            /**
-             * Kiểm tra xem nếu bỏ qua khoảng trắng thì input của user có khớp với đáp án hay không
-             * - dùng để hỗ trợ trường hợp người dùng nhập thiếu khoảng trắng nhưng vẫn đúng về mặt nội dung
-             */
-            function isNoSpaceMatch(user, correct) {
-                return Normalize(user) === Normalize(correct);
-            }
 
-            /**
-             * Tính độ tương đồng giữa 2 chuỗi bằng cách đếm số ký tự giống nhau ở cùng vị trí
-             * - dùng để tìm phần nào của đáp án mà user đã nhập đúng để hiển thị gợi ý
-             */
-            function similarity(a, b) {
-                let match = 0;
-                const len = Math.min(a.length, b.length);
 
-                for (let i = 0; i < len; i++) {
-                    if (a[i] === b[i]) match++;
-                }
 
-                return match;
-            }
 
             // gán sự kiện cho nút submit
             document.getElementById("submitBtn").onclick = handle;
