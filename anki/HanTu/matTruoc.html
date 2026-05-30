@@ -46,7 +46,6 @@
 
 <script>
     var raw = `{{Mặt trước}}`.replace(/\n/g, " ");
-    var time = new Date().toISOString();
     var cardKey = encodeURIComponent(raw);
     var fail = 0;
     var isFirst = true;
@@ -304,7 +303,7 @@
         return (m - lcs) + (n - lcs);
     }
 
-    var saveStats = XuatLogHam(function saveStats(value = 0, err1 = "", err2 = "", hint = "") {
+    var saveStats = XuatLogHam(function saveStats(time = new Date(), value = 0, err1 = "", err2 = "", hint = "") {
         const MAX_ATTEMPTS_PER_CARD = 20;
         // lấy dữ liệu cũ
         let stats = {};
@@ -357,12 +356,13 @@
             const SHOW_ANSWER_THRESHOLD = 10;
             const DATEMODE = "dateMode";
             const GOOD = "good";
-            // nếu raw rỗng thì không cần xử lý gì cả
             if (!raw) {
                 throw new Error("Mặt trước trống, không có gì để học cả!");
             }
             XuatLog(0, "Raw:" + JSON.stringify(raw));
-            time = TaoNgay(new Date("2026-05-20"), new Date("2026-05-26"));
+            var time = new Date();
+            // time = TaoNgay(new Date("2026-01-1"), new Date("2026-05-26"));
+            time = Date.now();
             XuatLog(0, "Time for stats:" + JSON.stringify(time));
 
             // lấy element input, result, hint để thao tác
@@ -373,9 +373,9 @@
             const hint = document.getElementById("hint");
 
             function handle() {
+                XuatLog(0, "<strong>Handling user input...</strong>");
                 const userInput = input.value;
 
-                // nếu input rỗng → cảnh báo và không xử lý tiếp
                 if (!userInput.trim()) {
                     hint.innerHTML = "⚠️ Vui lòng nhập đáp án";
                     input.focus();
@@ -387,7 +387,7 @@
 
                     // chỉ lưu nếu sai hoặc lần đầu (để có dữ liệu cải thiện)
                     if (fail > 0 || isFirst) {
-                        saveStats(fail, "", "", "");
+                        saveStats(time, fail, "", "", "");
                         localStorage.setItem(GOOD, false);
                     }
 
@@ -480,20 +480,16 @@
                     input.select();
 
                     // lưu lỗi vào messageError để cải thiện gợi ý sau này
-                    saveStats(fail, answers.map(a => a.roma).join("; "), userInput, html.replace(/<span class="correct">/g, "").replace(/<\/span>/g, "").replace(/<span class="missing">/g, ""));
+                    saveStats(time, fail, answers.map(a => a.roma).join("; "), userInput, html.replace(/<span class="correct">/g, "").replace(/<\/span>/g, "").replace(/<span class="missing">/g, ""));
                 }
 
                 if (isShowingAnswer) {
                     // lưu lỗi vào messageError để cải thiện gợi ý sau này
-                    saveStats(fail, `Tôi đã quên từ này hãy giúp tôi nhớ`, "", "");
+                    saveStats(time, ail, `Tôi đã quên từ này hãy giúp tôi nhớ`, "", "");
                     // reset lại trạng thái đã show đáp án để lần sau sẽ không show nữa
                     isShowingAnswer = false;
                 }
             }
-
-
-
-
 
             // gán sự kiện cho nút submit
             document.getElementById("submitBtn").onclick = handle;
