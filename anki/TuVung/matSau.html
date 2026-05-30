@@ -152,6 +152,10 @@
             recent = valuesAttempts;
             messageErrors = stats[cardKey].messageError || [];
 
+            log(JSON.stringify(attempts));
+            log(JSON.stringify(attemptsModeDate));
+            log(JSON.stringify(valuesAttempts));
+
             var avg = 0.0;
             avg = valuesAttempts.reduce((a, b) => a + b, 0) / valuesAttempts.length;
             const last = tinhTrungBinh(valuesAttempts, 0);
