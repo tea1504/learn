@@ -43,6 +43,320 @@
     var diffBar = "";
     var level = "";
     var levelClass = "";
+    var raw = `{{Mặt trước}}`.replace(/\n/g, " ");
+
+    function XuatLogHam(fn) {
+        return function (...args) {
+            const isXuatLogHam = false;
+            var cauTinNhan = `<span style="color: #cccc;">Gọi hàm <strong>${fn.name}</strong> với tham số: ${JSON.stringify(args)}</span>`;
+            try {
+                const result = fn(...args);
+                if (result) {
+                    cauTinNhan += `<br/><span style="color: #cccc;">Hàm <strong>${fn.name}</strong> trả về: ${JSON.stringify(result)}</span>`;
+                }
+
+                if (!isXuatLogHam) {
+                    cauTinNhan = "";
+                }
+
+                XuatLog(0, cauTinNhan);
+                return result;
+            }
+            catch (error) {
+                XuatLog(2, `Lỗi trong hàm <strong>${fn.name}</strong>: ${error}`);
+                throw error;
+            }
+        };
+    }
+
+    var XuatLogAttempts = XuatLogHam(function XuatLogAttempts(khoa = "") {
+        try {
+            var attempts = LayAttempts(khoa);
+            var message = "<br/ >";
+
+            Object.entries(attempts).forEach(([time, value]) => {
+                message += `${time}: ${value} <br/ >`;
+            });
+
+            XuatLog(message);
+        }
+        catch (e) {
+            XuatLog("Error in logAttempts: " + e.message);
+            throw e;
+        }
+    });
+    
+    function hienLoiVoiStyle(dapAn = "", loi = "") {
+        try {
+            var chuoiHTML = "";
+            for (let viTri = 0; viTri < Math.max(dapAn.length, loi.length); viTri++) {
+                if (viTri >= loi.length) {
+                    break;
+                }
+
+                if (viTri >= dapAn.length) {
+                    chuoiHTML += `<span style="background: #fee2e2; color: #991b1b;">${loi.charAt(viTri)}</span>`
+                    continue;
+                }
+
+                if (dapAn.charAt(viTri) === loi.charAt(viTri)) {
+                    chuoiHTML += `<span style="background: #dcfce7; color: #166534;">${loi.charAt(viTri)}</span>`
+                }
+                else {
+                    chuoiHTML += `<span style="background: #fee2e2; color: #991b1b;">${loi.charAt(viTri)}</span>`
+                }
+            }
+
+            return chuoiHTML;
+        }
+        catch (e) {
+            XuatLog("Error in tinhTrungBinh: " + e.message);
+            throw e;
+        }
+    }
+
+    function tinhTrungBinh(arrKetQua = [], intKhoanCach = 0) {
+        try {
+            if (!arrKetQua || arrKetQua.length === 0) {
+                return 0;
+            }
+
+            if (arrKetQua[arrKetQua.length - 1] === 0) {
+                return 0;
+            }
+
+            if (arrKetQua.length - intKhoanCach === 0) {
+                return 0;
+            }
+
+            let index = 0;
+
+            for (let i = 0; i < arrKetQua.length - intKhoanCach; i++) {
+                if (arrKetQua[i] > 0) {
+                    index = i;
+                }
+            }
+
+            const arrKetQuaTheoIndex = arrKetQua.slice(0, index + 1);
+            if (arrKetQuaTheoIndex.length === 0) {
+                return 0;
+            }
+            return arrKetQuaTheoIndex.reduce((a, b) => a + b, 0) / arrKetQuaTheoIndex.length;
+        }
+        catch (e) {
+            XuatLog("Error in tinhTrungBinh: " + e.message);
+            throw e;
+        }
+    }
+
+    function checkAgree(checkboxId = "") {
+        try {
+            const checkbox = document.getElementById(checkboxId);
+            const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+            const cardKey = encodeURIComponent(raw);
+            const maxKey = Object.keys(stats[cardKey].attempts).reduce((a, b) => a > b ? a : b);
+            var value = LayAttempt(maxKey) || 0;
+            XuatLog(`Checkbox ${checkboxId} is now ${checkbox.checked ? "checked" : "unchecked"}. Current attempts for ${maxKey}: ${value}`);
+            if (checkbox.checked) {
+                value = Math.max(0, value - 1);
+            }
+            else {
+                value = value + 1;
+            }
+            GanAttempts(maxKey, value);
+            diffBar = RenderBar(Math.random() * 100);
+            VeGiaoDienAnalytics();
+        }
+        catch (e) {
+            XuatLog("Error in checkAgree: " + e.message);
+            throw e;
+        }
+    }
+
+    var LayStats = XuatLogHam(function LayStats(khoa = "") {
+        try {
+            const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+            return stats[khoa] || { attempts: {}, messageError: [] };
+        }
+        catch (e) {
+            XuatLog("Error in layStats: " + e.message);
+            throw e;
+        }
+    });
+
+    function GanStats(attempts = {}, messageError = []) {
+        try {
+            const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+            const cardKey = encodeURIComponent(raw);
+            stats[cardKey] = { attempts, messageError };
+            localStorage.setItem(CARDSTATUS, JSON.stringify(stats));
+        }
+        catch (e) {
+            XuatLog("Error in ganStats: " + e.message);
+            throw e;
+        }
+    }
+
+    var LayAttempts = XuatLogHam(function LayAttempts(khoa = "") {
+        try {
+            const stats = LayStats(khoa);
+            if (!stats.attempts) {
+                return 0;
+            }
+            return stats.attempts || 0;
+        }
+        catch (e) {
+            XuatLog("Error in layAttempts: " + e.message);
+            throw e;
+        }
+    });
+
+    var LayAttempt = XuatLogHam(function LayAttempt(khoa = "", time = "") {
+        try {
+            const attempts = LayAttempts(khoa);
+            return attempts[time] || 0;
+        }
+        catch (e) {
+            XuatLog("Error in layAttempt: " + e.message);
+            throw e;
+        }
+    });
+
+    function GanAttempts(khoa = "", value = 0) {
+        try {
+            var stats = {};
+            var attempts = {};
+            var cardKey = encodeURIComponent(raw);
+
+            stats = LayStats(khoa);
+
+            if (!stats[cardKey]) {
+                stats[cardKey] = { attempts: {}, messageError: [] };
+            }
+
+            attempts = stats[cardKey].attempts;
+            attempts[khoa] = value;
+
+            GanStats(attempts, stats[cardKey].messageError);
+        }
+        catch (e) {
+            XuatLog("Error in GanAttempts: " + e.message);
+            throw e;
+        }
+    }
+
+    function XuatLog(...message) {
+        const logBox = document.getElementById("logBox");
+        var time = "";
+        message.forEach(line => {
+            time = new Date().toLocaleTimeString();
+            logBox.innerHTML = `[${time}] ${line}<br>` + logBox.innerHTML;
+        });
+    }
+
+    function RenderBar(percent = 0) {
+        try {
+            const total = 20;
+            const filled = Math.round((percent / 100) * total);
+            return "█".repeat(filled) + "░".repeat(total - filled);
+        }
+        catch (e) {
+            XuatLog("Error in RenderBar: " + e.message);
+            throw e;
+        }
+    }
+
+    function VeGiaoDienAnalytics() {
+        try {
+            const htmlContent = `
+        <div style="margin-top:10px;">
+            
+            <div class="checkboxes">
+                <label><input type="checkbox" id="cbHanTu"> Hán tự</label>
+                <label><input type="checkbox" id="cbCachDung"> Cách dùng</label>
+                <label><input type="checkbox" id="cbViDu"> Ví Dụ</label>
+                <label><input type="checkbox" id="cbMoRong"> Mở rộng</label>
+                <label><input type="checkbox" id="cbNguPhap"> Ngữ pháp</label>
+                <label><input type="checkbox" id="cbLoi"> Lỗi</label>
+                <label><input type="checkbox" id="cbThamKhao"> Tham khảo</label>
+                <label><input type="checkbox" id="cbNangCao"> Nâng cao</label>
+            </div>
+        </div>
+        <br />
+        @errorTableHTML
+    `;
+            var container = document.getElementById("analytics");
+
+            var div1 = document.createElement("div");
+            var div1_level = document.createElement("div");
+            div1_level.classList.add(levelClass);
+            div1_level.innerText = level;
+            div1.appendChild(div1_level);
+            var div1_streak = document.createElement("div");
+            div1_streak.innerText = `🔥 Streak: @streak`;
+            div1.appendChild(div1_streak);
+            var div1_TienBo = document.createElement("div");
+            div1_TienBo.innerText = "📊 Tiến bộ:";
+            div1.appendChild(div1_TienBo);
+            var div1_Chart = document.createElement("canvas");
+            div1_Chart.id = "chartCanvas";
+            div1_Chart.height = 80;
+            div1.appendChild(div1_Chart);
+            var div1_Trend = document.createElement("div");
+            div1_Trend.innerText = 'trendText';
+            div1.appendChild(div1_Trend);
+            var div1_Difficulty = document.createElement("div");
+            div1_Difficulty.innerText = `Độ khó: @difficulty.toFixed(0)%\n@difficultyInfo`;
+            div1.appendChild(div1_Difficulty);
+            var div1_Stability = document.createElement("div");
+            div1_Stability.innerText = '@stability';
+            div1.appendChild(div1_Stability);
+
+            var div2 = document.createElement("div");
+            div2.style.marginTop = "10px";
+            var div2_Buttons = document.createElement("div");
+            div2_Buttons.classList.add("buttons");
+            var copyBtn = document.createElement("button");
+            copyBtn.id = "copyBtn";
+            copyBtn.innerText = "📋 Copy";
+            div2_Buttons.appendChild(copyBtn);
+            var copyErrBtn = document.createElement("button");
+            copyErrBtn.id = "copyErr";
+            copyErrBtn.innerText = "❌ Lỗi";
+            div2_Buttons.appendChild(copyErrBtn);
+            div2.appendChild(div2_Buttons);
+            var div2_Checkboxes = document.createElement("div");
+            div2_Checkboxes.classList.add("checkboxes");
+            var div2_CheckboxIds = ["cbHanTu", "cbCachDung", "cbViDu", "cbMoRong", "cbNguPhap", "cbLoi", "cbThamKhao", "cbNangCao"];
+            var div2_CheckboxLabels = ["Hán tự", "Cách dùng", "Ví Dụ", "Mở rộng", "Ngữ pháp", "Lỗi", "Tham khảo", "Nâng cao"];
+            div2_CheckboxIds.forEach((id, index) => {
+                var label = document.createElement("label");
+                var checkbox = document.createElement("input");
+                checkbox.type = "checkbox";
+                checkbox.id = id;
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(" " + div2_CheckboxLabels[index]));
+                div2_Checkboxes.appendChild(label);
+            });
+            div2.appendChild(div2_Checkboxes);
+
+            var brTag = document.createElement("br");
+
+            var errorTableHTML = '';
+
+            container.innerHTML = "";
+            container.appendChild(div1);
+            container.appendChild(div2);
+            container.appendChild(brTag);
+
+
+            XuatLog(JSON.stringify(container.children));
+        }
+        catch (e) {
+            XuatLog("Error in VeGiaoDienAnalytics: " + e.message);
+            throw e;
+        }
+    }
 
     (function () {
         try {
@@ -56,7 +370,7 @@
             /* =========================
                🛡️ SAFE DATA
             ========================= */
-            var raw = `{{Mặt trước}}`.replace(/\n/g, " ");
+            raw = `{{Mặt trước}}`.replace(/\n/g, " ");
             if (!raw) {
                 XuatLog("Raw data is empty");
                 return;
@@ -125,7 +439,7 @@
                 return getFailedWords().join(",");
             }
 
-            const stats = JSON.parse(localStorage.getItem(CARDSTATUS) || "{}");
+            const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
             const container = document.getElementById("analytics");
             const card = document.querySelector(".card-container");
 
@@ -152,9 +466,7 @@
             recent = valuesAttempts;
             messageErrors = stats[cardKey].messageError || [];
 
-            log(JSON.stringify(attempts));
-            log(JSON.stringify(attemptsModeDate));
-            log(JSON.stringify(valuesAttempts));
+            XuatLogAttempts(cardKey);
 
             var avg = 0.0;
             avg = valuesAttempts.reduce((a, b) => a + b, 0) / valuesAttempts.length;
@@ -628,281 +940,4 @@
         }
     })();
 
-    function hienLoiVoiStyle(dapAn = "", loi = "") {
-        try {
-            var chuoiHTML = "";
-            for (let viTri = 0; viTri < Math.max(dapAn.length, loi.length); viTri++) {
-                if (viTri >= loi.length) {
-                    break;
-                }
-
-                if (viTri >= dapAn.length) {
-                    chuoiHTML += `<span style="background: #fee2e2; color: #991b1b;">${loi.charAt(viTri)}</span>`
-                    continue;
-                }
-
-                if (dapAn.charAt(viTri) === loi.charAt(viTri)) {
-                    chuoiHTML += `<span style="background: #dcfce7; color: #166534;">${loi.charAt(viTri)}</span>`
-                }
-                else {
-                    chuoiHTML += `<span style="background: #fee2e2; color: #991b1b;">${loi.charAt(viTri)}</span>`
-                }
-            }
-
-            return chuoiHTML;
-        }
-        catch (e) {
-            XuatLog("Error in tinhTrungBinh: " + e.message);
-            throw e;
-        }
-    }
-
-    function tinhTrungBinh(arrKetQua = [], intKhoanCach = 0) {
-        try {
-            if (!arrKetQua || arrKetQua.length === 0) {
-                return 0;
-            }
-
-            if (arrKetQua[arrKetQua.length - 1] === 0) {
-                return 0;
-            }
-
-            if (arrKetQua.length - intKhoanCach === 0) {
-                return 0;
-            }
-
-            let index = 0;
-
-            for (let i = 0; i < arrKetQua.length - intKhoanCach; i++) {
-                if (arrKetQua[i] > 0) {
-                    index = i;
-                }
-            }
-
-            const arrKetQuaTheoIndex = arrKetQua.slice(0, index + 1);
-            if (arrKetQuaTheoIndex.length === 0) {
-                return 0;
-            }
-            return arrKetQuaTheoIndex.reduce((a, b) => a + b, 0) / arrKetQuaTheoIndex.length;
-        }
-        catch (e) {
-            XuatLog("Error in tinhTrungBinh: " + e.message);
-            throw e;
-        }
-    }
-
-    function checkAgree(checkboxId = "") {
-        try {
-            const checkbox = document.getElementById(checkboxId);
-            const stats = JSON.parse(localStorage.getItem(CARDSTATUS) || "{}");
-            const cardKey = encodeURIComponent(raw);
-            const maxKey = Object.keys(stats[cardKey].attempts).reduce((a, b) => a > b ? a : b);
-            var value = LayAttempts(maxKey) || 0;
-            XuatLog(`Checkbox ${checkboxId} is now ${checkbox.checked ? "checked" : "unchecked"}. Current attempts for ${maxKey}: ${value}`);
-            if (checkbox.checked) {
-                value = Math.max(0, value - 1);
-            }
-            else {
-                value = value + 1;
-            }
-            GanAttempts(maxKey, value);
-            diffBar = RenderBar(Math.random() * 100);
-            VeGiaoDienAnalytics();
-            XuatLogAttempts();
-        }
-        catch (e) {
-            XuatLog("Error in checkAgree: " + e.message);
-            throw e;
-        }
-    }
-
-    function XuatLogAttempts() {
-        try {
-            var attempts = LayStats().attempts || { "": 0 };
-
-            Object.entries(attempts).forEach(([time, value]) => {
-                XuatLog(`Attempt at ${time}: ${value}`);
-            });
-        }
-        catch (e) {
-            XuatLog("Error in logAttempts: " + e.message);
-            throw e;
-        }
-    }
-
-    function LayStats() {
-        try {
-            const stats = JSON.parse(localStorage.getItem(CARDSTATUS) || "{}");
-            const cardKey = encodeURIComponent(raw);
-            return stats[cardKey] || { attempts: {}, messageError: [] };
-        }
-        catch (e) {
-            XuatLog("Error in layStats: " + e.message);
-            throw e;
-        }
-    }
-
-    function GanStats(attempts = {}, messageError = []) {
-        try {
-            const stats = JSON.parse(localStorage.getItem(CARDSTATUS) || "{}");
-            const cardKey = encodeURIComponent(raw);
-            stats[cardKey] = { attempts, messageError };
-            localStorage.setItem(CARDSTATUS, JSON.stringify(stats));
-        }
-        catch (e) {
-            XuatLog("Error in ganStats: " + e.message);
-            throw e;
-        }
-    }
-
-    function LayAttempts(khoa = "") {
-        try {
-            const stats = LayStats();
-            if (!stats.attempts) {
-                return 0;
-            }
-            return stats.attempts[khoa] || 0;
-        }
-        catch (e) {
-            XuatLog("Error in layAttempts: " + e.message);
-            throw e;
-        }
-    }
-
-    function GanAttempts(khoa = "", value = 0) {
-        try {
-            var stats = {};
-            var attempts = {};
-            var cardKey = encodeURIComponent(raw);
-
-            stats = LayStats();
-
-            if (!stats[cardKey]) {
-                stats[cardKey] = { attempts: {}, messageError: [] };
-            }
-
-            attempts = stats[cardKey].attempts;
-            attempts[khoa] = value;
-
-            GanStats(attempts, stats[cardKey].messageError);
-        }
-        catch (e) {
-            XuatLog("Error in GanAttempts: " + e.message);
-            throw e;
-        }
-    }
-
-    function XuatLog(...message) {
-        const logBox = document.getElementById("logBox");
-        var time = "";
-        message.forEach(line => {
-            time = new Date().toLocaleTimeString();
-            logBox.innerHTML += `[${time}] ${line}<br>`;
-            logBox.scrollTop = logBox.scrollHeight;
-        });
-    }
-
-    function RenderBar(percent = 0) {
-        try {
-            const total = 20;
-            const filled = Math.round((percent / 100) * total);
-            return "█".repeat(filled) + "░".repeat(total - filled);
-        }
-        catch (e) {
-            XuatLog("Error in RenderBar: " + e.message);
-            throw e;
-        }
-    }
-
-    function VeGiaoDienAnalytics() {
-        try {
-            const htmlContent = `
-        <div style="margin-top:10px;">
-            
-            <div class="checkboxes">
-                <label><input type="checkbox" id="cbHanTu"> Hán tự</label>
-                <label><input type="checkbox" id="cbCachDung"> Cách dùng</label>
-                <label><input type="checkbox" id="cbViDu"> Ví Dụ</label>
-                <label><input type="checkbox" id="cbMoRong"> Mở rộng</label>
-                <label><input type="checkbox" id="cbNguPhap"> Ngữ pháp</label>
-                <label><input type="checkbox" id="cbLoi"> Lỗi</label>
-                <label><input type="checkbox" id="cbThamKhao"> Tham khảo</label>
-                <label><input type="checkbox" id="cbNangCao"> Nâng cao</label>
-            </div>
-        </div>
-        <br />
-        @errorTableHTML
-    `;
-            var container = document.getElementById("analytics");
-
-            var div1 = document.createElement("div");
-            var div1_level = document.createElement("div");
-            div1_level.classList.add(levelClass);
-            div1_level.innerText = level;
-            div1.appendChild(div1_level);
-            var div1_streak = document.createElement("div");
-            div1_streak.innerText = `🔥 Streak: @streak`;
-            div1.appendChild(div1_streak);
-            var div1_TienBo = document.createElement("div");
-            div1_TienBo.innerText = "📊 Tiến bộ:";
-            div1.appendChild(div1_TienBo);
-            var div1_Chart = document.createElement("canvas");
-            div1_Chart.id = "chartCanvas";
-            div1_Chart.height = 80;
-            div1.appendChild(div1_Chart);
-            var div1_Trend = document.createElement("div");
-            div1_Trend.innerText = 'trendText';
-            div1.appendChild(div1_Trend);
-            var div1_Difficulty = document.createElement("div");
-            div1_Difficulty.innerText = `Độ khó: @difficulty.toFixed(0)%\n@difficultyInfo`;
-            div1.appendChild(div1_Difficulty);
-            var div1_Stability = document.createElement("div");
-            div1_Stability.innerText = '@stability';
-            div1.appendChild(div1_Stability);
-
-            var div2 = document.createElement("div");
-            div2.style.marginTop = "10px";
-            var div2_Buttons = document.createElement("div");
-            div2_Buttons.classList.add("buttons");
-            var copyBtn = document.createElement("button");
-            copyBtn.id = "copyBtn";
-            copyBtn.innerText = "📋 Copy";
-            div2_Buttons.appendChild(copyBtn);
-            var copyErrBtn = document.createElement("button");
-            copyErrBtn.id = "copyErr";
-            copyErrBtn.innerText = "❌ Lỗi";
-            div2_Buttons.appendChild(copyErrBtn);
-            div2.appendChild(div2_Buttons);
-            var div2_Checkboxes = document.createElement("div");
-            div2_Checkboxes.classList.add("checkboxes");
-            var div2_CheckboxIds = ["cbHanTu", "cbCachDung", "cbViDu", "cbMoRong", "cbNguPhap", "cbLoi", "cbThamKhao", "cbNangCao"];
-            var div2_CheckboxLabels = ["Hán tự", "Cách dùng", "Ví Dụ", "Mở rộng", "Ngữ pháp", "Lỗi", "Tham khảo", "Nâng cao"];
-            div2_CheckboxIds.forEach((id, index) => {
-                var label = document.createElement("label");
-                var checkbox = document.createElement("input");
-                checkbox.type = "checkbox";
-                checkbox.id = id;
-                label.appendChild(checkbox);
-                label.appendChild(document.createTextNode(" " + div2_CheckboxLabels[index]));
-                div2_Checkboxes.appendChild(label);
-            });
-            div2.appendChild(div2_Checkboxes);
-
-            var brTag = document.createElement("br");
-
-            var errorTableHTML = '';
-
-            container.innerHTML = "";
-            container.appendChild(div1);
-            container.appendChild(div2);
-            container.appendChild(brTag);
-
-
-            XuatLog(JSON.stringify(container.children));
-        }
-        catch (e) {
-            XuatLog("Error in VeGiaoDienAnalytics: " + e.message);
-            throw e;
-        }
-    }
 </script>
