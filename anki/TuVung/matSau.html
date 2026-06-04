@@ -85,7 +85,7 @@
             throw e;
         }
     });
-    
+
     function hienLoiVoiStyle(dapAn = "", loi = "") {
         try {
             var chuoiHTML = "";
@@ -152,20 +152,29 @@
     function checkAgree(checkboxId = "") {
         try {
             const checkbox = document.getElementById(checkboxId);
-            const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+            var stats = {}
+            try {
+                stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
+            }
+            catch {
+                stats = {};
+            }
             const cardKey = encodeURIComponent(raw);
-            const maxKey = Object.keys(stats[cardKey].attempts).reduce((a, b) => a > b ? a : b);
+            var maxKey = "";
+            try {
+                maxKey = localStorage.getItem("lastCardTime") || "";
+            }
+            catch {
+                maxKey = "";
+            }
             var value = LayAttempt(maxKey) || 0;
             XuatLog(`Checkbox ${checkboxId} is now ${checkbox.checked ? "checked" : "unchecked"}. Current attempts for ${maxKey}: ${value}`);
             if (checkbox.checked) {
                 value = Math.max(0, value - 1);
             }
-            else {
-                value = value + 1;
-            }
             GanAttempts(maxKey, value);
             diffBar = RenderBar(Math.random() * 100);
-            VeGiaoDienAnalytics();
+            VeGiaoDienAnalytics(0, "", 0.01, "", "");
         }
         catch (e) {
             XuatLog("Error in checkAgree: " + e.message);
@@ -189,10 +198,24 @@
             const stats = JSON.parse(localStorage.getItem("cardStats") || "{}");
             const cardKey = encodeURIComponent(raw);
             stats[cardKey] = { attempts, messageError };
-            localStorage.setItem(CARDSTATUS, JSON.stringify(stats));
+            localStorage.setItem("cardStats", JSON.stringify(stats));
         }
         catch (e) {
             XuatLog("Error in ganStats: " + e.message);
+            throw e;
+        }
+    }
+
+    function LayMessageError(khoa = "") {
+        try {
+            const stats = LayStats(khoa);
+            if (!stats.messageError) {
+                return [];
+            }
+            return stats.messageError || [];
+        }
+        catch (e) {
+            XuatLog("Error in layMessageError: " + e.message);
             throw e;
         }
     }
@@ -266,26 +289,12 @@
         }
     }
 
-    function VeGiaoDienAnalytics() {
+    var VeGiaoDienAnalytics = XuatLogHam(function VeGiaoDienAnalytics(streak = 0, trendText = "", difficulty = 0.0, difficultyInfo = "", stability = "") {
         try {
-            const htmlContent = `
-        <div style="margin-top:10px;">
-            
-            <div class="checkboxes">
-                <label><input type="checkbox" id="cbHanTu"> Hán tự</label>
-                <label><input type="checkbox" id="cbCachDung"> Cách dùng</label>
-                <label><input type="checkbox" id="cbViDu"> Ví Dụ</label>
-                <label><input type="checkbox" id="cbMoRong"> Mở rộng</label>
-                <label><input type="checkbox" id="cbNguPhap"> Ngữ pháp</label>
-                <label><input type="checkbox" id="cbLoi"> Lỗi</label>
-                <label><input type="checkbox" id="cbThamKhao"> Tham khảo</label>
-                <label><input type="checkbox" id="cbNangCao"> Nâng cao</label>
-            </div>
-        </div>
-        <br />
-        @errorTableHTML
-    `;
+            XuatLog("Rendering analytics interface...");
             var container = document.getElementById("analytics");
+            var messageErrors = LayMessageError(encodeURIComponent(raw));
+            var errorTableHTML = VeErrorTable(messageErrors);
 
             var div1 = document.createElement("div");
             var div1_level = document.createElement("div");
@@ -293,7 +302,7 @@
             div1_level.innerText = level;
             div1.appendChild(div1_level);
             var div1_streak = document.createElement("div");
-            div1_streak.innerText = `🔥 Streak: @streak`;
+            div1_streak.innerText = `🔥 Streak: ${streak}`;
             div1.appendChild(div1_streak);
             var div1_TienBo = document.createElement("div");
             div1_TienBo.innerText = "📊 Tiến bộ:";
@@ -303,13 +312,13 @@
             div1_Chart.height = 80;
             div1.appendChild(div1_Chart);
             var div1_Trend = document.createElement("div");
-            div1_Trend.innerText = 'trendText';
+            div1_Trend.innerText = `${trendText}`;
             div1.appendChild(div1_Trend);
             var div1_Difficulty = document.createElement("div");
-            div1_Difficulty.innerText = `Độ khó: @difficulty.toFixed(0)%\n@difficultyInfo`;
+            div1_Difficulty.innerText = `Độ khó: ${difficulty.toFixed(0)}%\n${difficultyInfo}`;
             div1.appendChild(div1_Difficulty);
             var div1_Stability = document.createElement("div");
-            div1_Stability.innerText = '@stability';
+            div1_Stability.innerText = `${stability}`;
             div1.appendChild(div1_Stability);
 
             var div2 = document.createElement("div");
@@ -349,11 +358,51 @@
             container.appendChild(div2);
             container.appendChild(brTag);
 
+            container.innerHTML += errorTableHTML;
 
+            XuatLog("Analytics interface rendered with children:");
             XuatLog(JSON.stringify(container.children));
+            XuatLog(JSON.stringify(errorTableHTML));
         }
         catch (e) {
             XuatLog("Error in VeGiaoDienAnalytics: " + e.message);
+            throw e;
+        }
+    });
+
+    function VeErrorTable(messageErrors = []) {
+        try {
+            var errorTableHTML = '';
+            
+            if (messageErrors.length > 0) {
+                // tạo từng row lỗi
+                const errorRows = messageErrors.map((err, i) => `
+                <tr id="errorRow${i}" style="border: 1px solid #ddd;">
+                    <td style="border: 1px solid #ddd; text-align: center;"><input type="checkbox" id="errorCheck${i}" onclick="checkAgree('errorCheck${i}')"></td>
+                    <td style="border: 1px solid #ddd; padding-left: 10px; text-align: left;">${hienLoiVoiStyle(err.err1, err.err2)}</td>
+                </tr>
+            `).join('');
+                errorTableHTML = `
+                <div style="margin-top: 15px;">
+                    <div style="font-weight: bold; margin-bottom: 8px;">📋 Danh sách lỗi (${messageErrors.length}):</div>
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr>
+                                <th style="border: 1px solid #ddd; background-color: #f0f0f0; text-align: center; width: 30px;">STT</th>
+                                <th style="border: 1px solid #ddd; padding-left: 10px; text-align: left;">${messageErrors[0].err1}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${errorRows}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+            }
+            return errorTableHTML;
+        }
+        catch (e) {
+            XuatLog("Error in VeErrorTable: " + e.message);
             throw e;
         }
     }
@@ -421,7 +470,6 @@
     `;
             const cardKey = encodeURIComponent(raw);
             const FAILED_WORDS_KEY = "failedWords";
-            const CARDSTATUS = "cardStats";
             const DATEMODE = "dateMode";
             const GOOD = "good";
 
@@ -464,7 +512,7 @@
                 XuatLog("Date mode is OFF");
             }
             recent = valuesAttempts;
-            messageErrors = stats[cardKey].messageError || [];
+            messageErrors = LayMessageError(cardKey);
 
             XuatLogAttempts(cardKey);
 
@@ -538,34 +586,7 @@
                🎯 UI
             ========================= */
             // Build error table HTML
-            let errorTableHTML = '';
-            // nếu có lỗi → hiển thị bảng lỗi chi tiết để người học dễ dàng nhận biết và cải thiện
-            if (messageErrors.length > 0) {
-                // tạo từng row lỗi
-                const errorRows = messageErrors.map((err, i) => `
-                <tr id="errorRow${i}" style="border: 1px solid #ddd;">
-                    <td style="border: 1px solid #ddd; text-align: center;"><input type="checkbox" id="errorCheck${i}" onclick="checkAgree('errorCheck${i}')"></td>
-                    <td style="border: 1px solid #ddd; padding-left: 10px; text-align: left;">${hienLoiVoiStyle(err.err1, err.err2)}</td>
-                </tr>
-            `).join('');
-                // tạo bảng lỗi hoàn chỉnh
-                errorTableHTML = `
-                <div style="margin-top: 15px;">
-                    <div style="font-weight: bold; margin-bottom: 8px;">📋 Danh sách lỗi (${messageErrors.length}):</div>
-                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
-                        <thead>
-                            <tr>
-                                <th style="border: 1px solid #ddd; background-color: #f0f0f0; text-align: center; width: 30px;">STT</th>
-                                <th style="border: 1px solid #ddd; padding-left: 10px; text-align: left;">${messageErrors[0].err1}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${errorRows}
-                        </tbody>
-                    </table>
-                </div>
-            `;
-            }
+            let errorTableHTML = VeErrorTable(messageErrors);
 
             container.innerHTML = htmlContent.replace("@levelClass", levelClass)
                 .replace("@level", level)
@@ -573,7 +594,7 @@
                 .replace("@streak", streak)
                 .replace("@trendText", trendText)
                 .replace("@diffBar", diffBar)
-                .replace("@difficulty.toFixed(0)", difficulty.toFixed(0))
+                .replace("@difficulty", difficulty.toFixed(0))
                 .replace("@difficultyInfo", difficultyInfo)
                 .replace("@stability", stability)
                 .replace("@errorTableHTML", errorTableHTML);
@@ -741,8 +762,8 @@
                 }
 
                 btn.onclick = () => {
-                    localStorage.removeItem(CARDSTATUS);
-                    localStorage.removeItem(FAILED_WORDS_KEY);
+                    localStorage.removeItem("cardStats");
+                    localStorage.removeItem("failedWords");
                     drawChart();
 
                     container.innerHTML = htmlContent.replace("@levelClass", levelClass)
@@ -751,7 +772,7 @@
                         .replace("@streak", streak)
                         .replace("@trendText", trendText)
                         .replace("@diffBar", diffBar)
-                        .replace("@difficulty.toFixed(0)", difficulty.toFixed(0))
+                        .replace("@difficulty", difficulty.toFixed(0))
                         .replace("@difficultyInfo", difficultyInfo)
                         .replace("@stability", stability)
                         .replace("@errorTableHTML", errorTableHTML);
