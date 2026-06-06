@@ -17,13 +17,14 @@
         </div>
         <div class="checkboxes">
             <label><input type="checkbox" id="cbDateMode"> Date Mode</label>
+            <label><input type="checkbox" id="cbFE"> FE</label>
         </div>
     </div>
     <div id="logBox"></div>
 </div>
 
 <style>
-    .buttons {
+    .buttons, .checkboxes {
         display: flex;
     }
 
@@ -58,6 +59,7 @@
             // số lần sai để hiển thị đáp án
             const SHOW_ANSWER_THRESHOLD = 10;
             const DATEMODE = "dateMode";
+            const FEMODE = "feMode";
             // lấy raw string từ mặt trước, thay vì {{Mặt trước}} đã được Anki xử lý
             const raw = `{{Mặt trước}}`.replace(/\n/g, " ");
             // nếu raw rỗng thì không cần xử lý gì cả
@@ -66,7 +68,7 @@
             }
             const cardKey = encodeURIComponent(raw);
             var time = new Date().toISOString();
-            time = randomDate(new Date("2026-05-20"), new Date("2026-05-26"));
+            // time = randomDate(new Date("2026-05-20"), new Date("2026-05-26"));
             let fail = 0;
             let isFirst = true;
             let isShowingAnswer = false;
@@ -568,6 +570,17 @@
 
                 cbHanTu.addEventListener('change', (event) => {
                     localStorage.setItem(DATEMODE, event.target.checked);
+                });
+
+            }, 0);
+
+            setTimeout(() => {
+                const cbHanTu = document.getElementById('cbFE');
+
+                cbHanTu.checked = localStorage.getItem(FEMODE) === "true";
+
+                cbHanTu.addEventListener('change', (event) => {
+                    localStorage.setItem(FEMODE, event.target.checked);
                 });
 
             }, 0);
